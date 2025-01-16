@@ -19,14 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	RestaurantService_CreateRestaurant_FullMethodName = "/restaurant.RestaurantService/CreateRestaurant"
+	RestaurantService_PrepareRestaurant_FullMethodName  = "/restaurant.RestaurantService/PrepareRestaurant"
+	RestaurantService_CommitRestaurant_FullMethodName   = "/restaurant.RestaurantService/CommitRestaurant"
+	RestaurantService_RollbackRestaurant_FullMethodName = "/restaurant.RestaurantService/RollbackRestaurant"
 )
 
 // RestaurantServiceClient is the client API for RestaurantService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RestaurantServiceClient interface {
-	CreateRestaurant(ctx context.Context, in *CreateRestaurantRequest, opts ...grpc.CallOption) (*CreateRestaurantResponse, error)
+	PrepareRestaurant(ctx context.Context, in *PrepareRestaurantRequest, opts ...grpc.CallOption) (*PrepareRestaurantResponse, error)
+	CommitRestaurant(ctx context.Context, in *CommitRestaurantRequest, opts ...grpc.CallOption) (*CommitRestaurantResponse, error)
+	RollbackRestaurant(ctx context.Context, in *RollbackRestaurantRequest, opts ...grpc.CallOption) (*RollbackRestaurantResponse, error)
 }
 
 type restaurantServiceClient struct {
@@ -37,10 +41,30 @@ func NewRestaurantServiceClient(cc grpc.ClientConnInterface) RestaurantServiceCl
 	return &restaurantServiceClient{cc}
 }
 
-func (c *restaurantServiceClient) CreateRestaurant(ctx context.Context, in *CreateRestaurantRequest, opts ...grpc.CallOption) (*CreateRestaurantResponse, error) {
+func (c *restaurantServiceClient) PrepareRestaurant(ctx context.Context, in *PrepareRestaurantRequest, opts ...grpc.CallOption) (*PrepareRestaurantResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateRestaurantResponse)
-	err := c.cc.Invoke(ctx, RestaurantService_CreateRestaurant_FullMethodName, in, out, cOpts...)
+	out := new(PrepareRestaurantResponse)
+	err := c.cc.Invoke(ctx, RestaurantService_PrepareRestaurant_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *restaurantServiceClient) CommitRestaurant(ctx context.Context, in *CommitRestaurantRequest, opts ...grpc.CallOption) (*CommitRestaurantResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CommitRestaurantResponse)
+	err := c.cc.Invoke(ctx, RestaurantService_CommitRestaurant_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *restaurantServiceClient) RollbackRestaurant(ctx context.Context, in *RollbackRestaurantRequest, opts ...grpc.CallOption) (*RollbackRestaurantResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RollbackRestaurantResponse)
+	err := c.cc.Invoke(ctx, RestaurantService_RollbackRestaurant_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +75,9 @@ func (c *restaurantServiceClient) CreateRestaurant(ctx context.Context, in *Crea
 // All implementations must embed UnimplementedRestaurantServiceServer
 // for forward compatibility.
 type RestaurantServiceServer interface {
-	CreateRestaurant(context.Context, *CreateRestaurantRequest) (*CreateRestaurantResponse, error)
+	PrepareRestaurant(context.Context, *PrepareRestaurantRequest) (*PrepareRestaurantResponse, error)
+	CommitRestaurant(context.Context, *CommitRestaurantRequest) (*CommitRestaurantResponse, error)
+	RollbackRestaurant(context.Context, *RollbackRestaurantRequest) (*RollbackRestaurantResponse, error)
 	mustEmbedUnimplementedRestaurantServiceServer()
 }
 
@@ -62,8 +88,14 @@ type RestaurantServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedRestaurantServiceServer struct{}
 
-func (UnimplementedRestaurantServiceServer) CreateRestaurant(context.Context, *CreateRestaurantRequest) (*CreateRestaurantResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateRestaurant not implemented")
+func (UnimplementedRestaurantServiceServer) PrepareRestaurant(context.Context, *PrepareRestaurantRequest) (*PrepareRestaurantResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PrepareRestaurant not implemented")
+}
+func (UnimplementedRestaurantServiceServer) CommitRestaurant(context.Context, *CommitRestaurantRequest) (*CommitRestaurantResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CommitRestaurant not implemented")
+}
+func (UnimplementedRestaurantServiceServer) RollbackRestaurant(context.Context, *RollbackRestaurantRequest) (*RollbackRestaurantResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RollbackRestaurant not implemented")
 }
 func (UnimplementedRestaurantServiceServer) mustEmbedUnimplementedRestaurantServiceServer() {}
 func (UnimplementedRestaurantServiceServer) testEmbeddedByValue()                           {}
@@ -86,20 +118,56 @@ func RegisterRestaurantServiceServer(s grpc.ServiceRegistrar, srv RestaurantServ
 	s.RegisterService(&RestaurantService_ServiceDesc, srv)
 }
 
-func _RestaurantService_CreateRestaurant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateRestaurantRequest)
+func _RestaurantService_PrepareRestaurant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PrepareRestaurantRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RestaurantServiceServer).CreateRestaurant(ctx, in)
+		return srv.(RestaurantServiceServer).PrepareRestaurant(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: RestaurantService_CreateRestaurant_FullMethodName,
+		FullMethod: RestaurantService_PrepareRestaurant_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RestaurantServiceServer).CreateRestaurant(ctx, req.(*CreateRestaurantRequest))
+		return srv.(RestaurantServiceServer).PrepareRestaurant(ctx, req.(*PrepareRestaurantRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RestaurantService_CommitRestaurant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommitRestaurantRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RestaurantServiceServer).CommitRestaurant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RestaurantService_CommitRestaurant_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RestaurantServiceServer).CommitRestaurant(ctx, req.(*CommitRestaurantRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RestaurantService_RollbackRestaurant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RollbackRestaurantRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RestaurantServiceServer).RollbackRestaurant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RestaurantService_RollbackRestaurant_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RestaurantServiceServer).RollbackRestaurant(ctx, req.(*RollbackRestaurantRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -112,8 +180,16 @@ var RestaurantService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*RestaurantServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateRestaurant",
-			Handler:    _RestaurantService_CreateRestaurant_Handler,
+			MethodName: "PrepareRestaurant",
+			Handler:    _RestaurantService_PrepareRestaurant_Handler,
+		},
+		{
+			MethodName: "CommitRestaurant",
+			Handler:    _RestaurantService_CommitRestaurant_Handler,
+		},
+		{
+			MethodName: "RollbackRestaurant",
+			Handler:    _RestaurantService_RollbackRestaurant_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

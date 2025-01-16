@@ -35,13 +35,22 @@ func (h *UserHandler) RegisterUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing required fields"})
 	}
 
+	// Transaction for user creation
+	tx := h.UserRepo.BeginTransaction()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	// Save user to the database
 	user := &models.User{
 		Email:    req.Email,
 		Password: req.Password,
 		UserType: req.UserType,
 	}
-	if err := h.UserRepo.CreateUser(user); err != nil {
+	if err := h.UserRepo.CreateUser(tx, user); err != nil {
+		tx.Rollback()
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to register user"})
 	}
 
@@ -53,25 +62,34 @@ func (h *UserHandler) RegisterUser(c echo.Context) error {
 			})
 		}
 
-		restaurantRequest := &pb.CreateRestaurantRequest{
+		restaurantRequest := &pb.PrepareRestaurantRequest{
 			UserId:  user.ID,
 			Email:   user.Email,
 			Name:    req.Name,
 			Address: req.Address,
 		}
 
-		// Make the gRPC call
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		response, err := h.RestaurantGRPC.CreateRestaurant(ctx, restaurantRequest)
+		response, err := h.RestaurantGRPC.PrepareRestaurant(ctx, restaurantRequest)
 		if err != nil || !response.Success {
+			tx.Rollback()
 			return c.JSON(http.StatusInternalServerError, map[string]string{
 				"error": "Failed to create restaurant via gRPC: " + response.GetMessage(),
 			})
 		}
-	}
 
+		if err := h.UserRepo.CommitTransaction(tx); err != nil {
+			_, _ = h.RestaurantGRPC.RollbackRestaurant(ctx, &pb.RollbackRestaurantRequest{UserId: user.ID})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to commit user transaction"})
+		}
+
+		_, err = h.RestaurantGRPC.CommitRestaurant(ctx, &pb.CommitRestaurantRequest{UserId: user.ID})
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to commit restaurant via gRPC"})
+		}
+	}
 	return c.JSON(http.StatusCreated, map[string]string{"message": "User registered successfully"})
 }
 
