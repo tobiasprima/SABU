@@ -22,14 +22,18 @@ func main(){
 	}
 
 	grpcServer := grpc.NewServer()
+
+	restaurantHandler := handlers.NewRestaurantGRpcHandler()
+
+	// Register the gRPC handler with the gRPC server
+	pb.RegisterRestaurantServiceServer(grpcServer, restaurantHandler)
+
+
 	go func() {
 		listener, err := net.Listen("tcp", ":50051")
 		if err != nil {
 			log.Fatalf("Failed to listen on port 50051: %v", err)
 		}
-
-		restaurantHandler := handlers.NewRestaurantGRpcHandler()
-		pb.RegisterRestaurantServiceServer(grpcServer, restaurantHandler)
 
 		log.Println("gRPC server running on port 50051")
 		if err := grpcServer.Serve(listener); err != nil {

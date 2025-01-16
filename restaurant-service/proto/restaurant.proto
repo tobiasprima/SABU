@@ -5,17 +5,37 @@ package restaurant;
 option go_package = "pb/;pb";
 
 service RestaurantService {
-    rpc CreateRestaurant (CreateRestaurantRequest) returns (CreateRestaurantResponse);
+  rpc PrepareRestaurant (PrepareRestaurantRequest) returns (PrepareRestaurantResponse);
+  rpc CommitRestaurant (CommitRestaurantRequest) returns (CommitRestaurantResponse);
+  rpc RollbackRestaurant (RollbackRestaurantRequest) returns (RollbackRestaurantResponse);
 }
 
-message CreateRestaurantRequest {
-  string user_id = 1; // User ID from the User Service
-  string email = 2;   // Email of the user
-  string name = 3;    // Restaurant name
-  string address = 4; // Restaurant address
+message PrepareRestaurantRequest {
+  string user_id = 1;
+  string email = 2;
+  string name = 3;
+  string address = 4;
 }
 
-message CreateRestaurantResponse {
-  bool success = 1;   // Indicates if the operation was successful
-  string message = 2; // Additional information or error details
+message PrepareRestaurantResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message CommitRestaurantRequest {
+  string user_id = 1;
+}
+
+message CommitRestaurantResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RollbackRestaurantRequest {
+  string user_id = 1;
+}
+
+message RollbackRestaurantResponse {
+  bool success = 1;
+  string message = 2;
 }
