@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"sabu-restaurant-service/config"
+	"sabu-restaurant-service/routes"
 
 	"github.com/labstack/echo/v4"
 )
@@ -19,7 +20,7 @@ func main(){
 	// AutoMigrate models BUAT PAS PERTAMA JALANIN BIAR TABLE AUTO CREATE, PAS UDA CREATED DELETE GAPAPA
 	// db.AutoMigrate(&models.User{}) // SESUAIN SAMA MODEL KALIAN
 
-	// routes.RegisterRoutes(e)
+	routes.RegisterRoutes(e)
 
 	port := os.Getenv("PORT")
 	if port == "" {
