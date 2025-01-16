@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package restaurant;
+
+option go_package = "pb/;pb";
+
+service RestaurantService {
+    rpc CreateRestaurant (CreateRestaurantRequest) returns (CreateRestaurantResponse);
+}
+
+message CreateRestaurantRequest {
+  string user_id = 1; // User ID from the User Service
+  string email = 2;   // Email of the user
+  string name = 3;    // Restaurant name
+  string address = 4; // Restaurant address
+}
+
+message CreateRestaurantResponse {
+  bool success = 1;   // Indicates if the operation was successful
+  string message = 2; // Additional information or error details
+}
