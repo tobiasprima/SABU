@@ -1,46 +1,76 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
+	"sabu-user-service/dtos"
 	"sabu-user-service/models"
+	"sabu-user-service/proto/pb"
 	"sabu-user-service/repository"
 	"sabu-user-service/utils"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
 
 type UserHandler struct {
 	UserRepo       *repository.UserRepository
+	RestaurantGRPC  pb.RestaurantServiceClient
 }
 
-func NewUserHandler() *UserHandler {
+func NewUserHandler(restaurantClient pb.RestaurantServiceClient) *UserHandler {
 	return &UserHandler{
 		UserRepo:       repository.NewUserRepository(),
+		RestaurantGRPC: restaurantClient,
 	}
 }
 
 func (h *UserHandler) RegisterUser(c echo.Context) error {
-	user := new(models.User)
-	if err := c.Bind(user); err != nil {
+	req := new(dtos.RegisterUserRequest)
+	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
 	}
 
+	if req.Email == "" || req.Password == "" || req.UserType == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Missing required fields"})
+	}
+
 	// Save user to the database
+	user := &models.User{
+		Email:    req.Email,
+		Password: req.Password,
+		UserType: req.UserType,
+	}
 	if err := h.UserRepo.CreateUser(user); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to register user"})
 	}
 
-	// Handle restaurant-specific logic
-	// if user.UserType == "restaurant" {
-	// 	restaurant := &models.Restaurant{
-	// 		UserID:  user.ID,
-	// 		Name:    c.FormValue("restaurant_name"),
-	// 		Address: c.FormValue("address"),
-	// 	}
-	// 	if err := h.RestaurantRepo.CreateRestaurant(restaurant); err != nil {
-	// 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to create restaurant"})
-	// 	}
-	// }
+	// Create Restaurant
+	if req.UserType == "restaurant" {
+		if req.Name == "" || req.Address == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": "Name and address are required for user_type 'restaurant'",
+			})
+		}
+
+		restaurantRequest := &pb.CreateRestaurantRequest{
+			UserId:  user.ID,
+			Email:   user.Email,
+			Name:    req.Name,
+			Address: req.Address,
+		}
+
+		// Make the gRPC call
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		response, err := h.RestaurantGRPC.CreateRestaurant(ctx, restaurantRequest)
+		if err != nil || !response.Success {
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error": "Failed to create restaurant via gRPC: " + response.GetMessage(),
+			})
+		}
+	}
 
 	return c.JSON(http.StatusCreated, map[string]string{"message": "User registered successfully"})
 }
