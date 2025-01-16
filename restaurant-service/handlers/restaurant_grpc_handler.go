@@ -17,6 +17,13 @@ func NewRestaurantGRpcHandler() *RestaurantGRprcHandler {
 }
 
 func (h *RestaurantGRprcHandler) CreateRestaurant(ctx context.Context, req *pb.CreateRestaurantRequest) (*pb.CreateRestaurantResponse, error) {
+	if req.Name == "" || req.Address == "" {
+		return &pb.CreateRestaurantResponse{
+			Success: false,
+			Message: "Name and address cannot be empty",
+		}, nil
+	}
+	
 	restaurant := &models.Restaurant{
 		UserID:  req.UserId,
 		Email:   req.Email,
