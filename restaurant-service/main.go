@@ -17,9 +17,6 @@ func main(){
 		log.Fatalf("Database connection failed: %v", err)
 	}
 
-	// AutoMigrate models BUAT PAS PERTAMA JALANIN BIAR TABLE AUTO CREATE, PAS UDA CREATED DELETE GAPAPA
-	// db.AutoMigrate(&models.User{}) // SESUAIN SAMA MODEL KALIAN
-
 	routes.RegisterRoutes(e)
 
 	port := os.Getenv("PORT")
