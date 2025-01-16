@@ -1,9 +1,7 @@
 package config
 
 import (
-	"donor-service/models"
 	"fmt"
-	"log"
 	"os"
 
 	"gorm.io/driver/postgres"
@@ -11,7 +9,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func InitDB() *gorm.DB {
+func InitDB() (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_USER"),
@@ -23,12 +21,12 @@ func InitDB() *gorm.DB {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+		return nil, fmt.Errorf("failed to connect to the database: %v", err)
 	}
 
-	if err := db.AutoMigrate(&models.Donor{}, &models.TopUp{}, &models.Transaction{}); err != nil {
-		log.Fatalf("Failed to migrate schema: %v", err)
-	}
+	// if err := db.AutoMigrate(&models.Donor{}); err != nil {
+	// 	return nil, fmt.Errorf("failed to migrate schema: %v", err)
+	// }
 
-	return db
+	return db, nil
 }
