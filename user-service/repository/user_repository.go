@@ -3,6 +3,7 @@ package repository
 import (
 	"sabu-user-service/config"
 	"sabu-user-service/models"
+	"sabu-user-service/utils"
 
 	"gorm.io/gorm"
 )
@@ -16,6 +17,12 @@ func NewUserRepository() *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(user *models.User) error {
+	hashedPassword, err := utils.HashPassword(user.Password)
+	if err != nil {
+		return err
+	}
+	user.Password = hashedPassword
+
 	return r.DB.Create(user).Error
 }
 
