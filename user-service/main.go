@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"sabu-user-service/config"
+	"sabu-user-service/routes"
 
 	"github.com/labstack/echo/v4"
 )
@@ -11,15 +12,15 @@ import (
 func main(){
 	e := echo.New()
 
-	_, err := config.InitDB()
+	db, err := config.InitDB()
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
 	}
 
 	// AutoMigrate models BUAT PAS PERTAMA JALANIN BIAR TABLE AUTO CREATE, PAS UDA CREATED DELETE GAPAPA
-	// db.AutoMigrate(&models.User{}, &models.Post{}, &models.Comment{}, &models.ActivityLog{}) // SESUAIN SAMA MODEL KALIAN
+	// db.AutoMigrate(&models.User{}) // SESUAIN SAMA MODEL KALIAN
 
-	// routes.RegisterRoutes(e, db)
+	routes.RegisterRoutes(e, db)
 
 	port := os.Getenv("PORT")
 	if port == "" {
