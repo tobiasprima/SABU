@@ -10,4 +10,5 @@ func RegisterRoutes (e *echo.Echo) {
 	userHandler := handlers.NewUserHandler()
 
 	e.POST("/user/register", userHandler.RegisterUser)
+	e.POST("/user/login", userHandler.LoginUser)
 }

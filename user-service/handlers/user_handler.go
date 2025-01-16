@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"sabu-user-service/models"
 	"sabu-user-service/repository"
+	"sabu-user-service/utils"
 
 	"github.com/labstack/echo/v4"
 )
@@ -42,4 +43,31 @@ func (h *UserHandler) RegisterUser(c echo.Context) error {
 	// }
 
 	return c.JSON(http.StatusCreated, map[string]string{"message": "User registered successfully"})
+}
+
+func (h *UserHandler) LoginUser(c echo.Context) error {
+	req := new(models.User)
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
+	}
+
+	user, err := h.UserRepo.FindByEmail(req.Email)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid email or password"})
+	}
+
+	if !utils.CheckPasswordHash(req.Password, user.Password) {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid email or password"})
+	}
+
+	token, err := utils.GenerateJWT(user.ID, user.UserType)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate token"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "Login successful",
+		"token":   token,
+	})
+
 }
