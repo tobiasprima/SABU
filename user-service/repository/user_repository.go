@@ -16,14 +16,26 @@ func NewUserRepository() *UserRepository {
 	return &UserRepository{DB: config.Database.User}
 }
 
-func (r *UserRepository) CreateUser(user *models.User) error {
+func (r *UserRepository) BeginTransaction() *gorm.DB {
+	return r.DB.Begin()
+}
+
+func (r *UserRepository) CommitTransaction(tx *gorm.DB) error {
+	return tx.Commit().Error
+}
+
+func (r *UserRepository) RollbackTransaction(tx *gorm.DB) error {
+	return tx.Rollback().Error
+}
+
+func (r *UserRepository) CreateUser(tx *gorm.DB, user *models.User) error {
 	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
 		return err
 	}
 	user.Password = hashedPassword
 
-	return r.DB.Create(user).Error
+	return tx.Create(user).Error
 }
 
 func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
