@@ -12,7 +12,7 @@ import (
 func main(){
 	e := echo.New()
 
-	db, err := config.InitDB()
+	err := config.InitDB()
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
 	}
@@ -20,7 +20,7 @@ func main(){
 	// AutoMigrate models BUAT PAS PERTAMA JALANIN BIAR TABLE AUTO CREATE, PAS UDA CREATED DELETE GAPAPA
 	// db.AutoMigrate(&models.User{}) // SESUAIN SAMA MODEL KALIAN
 
-	routes.RegisterRoutes(e, db)
+	routes.RegisterRoutes(e)
 
 	port := os.Getenv("PORT")
 	if port == "" {
