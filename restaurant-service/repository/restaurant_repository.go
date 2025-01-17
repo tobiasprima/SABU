@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"sabu-restaurant-service/config"
 	"sabu-restaurant-service/models"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
 )
@@ -44,4 +46,22 @@ func (r *RestaurantRepository) GetMealsByRestaurantID(ctx context.Context, resta
 	}
 
 	return meals, nil
+}
+
+func (r *RestaurantRepository) GetMealByID(ctx context.Context, mealId string) (*models.Meal, error) {
+	objectID, err := primitive.ObjectIDFromHex(mealId)
+	if err != nil {
+		return nil, errors.New("invalid meal ID format")
+	}
+
+	var meal models.Meal
+	err = r.MealsCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&meal)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &meal, nil
 }

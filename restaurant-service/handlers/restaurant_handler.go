@@ -72,3 +72,23 @@ func (h *RestaurantHandler) GetMealsByRestaurantID(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]interface{}{"data": meals})
 }
+
+func (h *RestaurantHandler) GetMealByID(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	mealId := c.Param("meal_id")
+	if mealId == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Meal id is required"})
+	}
+
+	meal, err := h.RestaurantRepo.GetMealByID(ctx, mealId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get meal by id"})
+	}
+
+	if meal == nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Meal not found"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{"data": meal})
+}
