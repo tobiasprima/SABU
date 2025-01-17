@@ -9,5 +9,6 @@ import (
 func RegisterRoutes(e *echo.Echo) {
 	restaurantHandler := handlers.NewRestaurantHandler()
 
-	e.POST("/restaurant/:restaurantID/add-meal", restaurantHandler.AddMeal)
+	e.POST("/restaurant/:restaurant_id/add-meal", restaurantHandler.AddMeal)
+	e.GET("/restaurant/:restaurant_id/get-meals", restaurantHandler.GetMealsByRestaurantID)
 }
