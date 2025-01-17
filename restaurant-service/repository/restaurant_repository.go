@@ -2,9 +2,12 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"sabu-restaurant-service/config"
 	"sabu-restaurant-service/models"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
 )
@@ -28,4 +31,37 @@ func (r *RestaurantRepository) CreateRestaurant(restaurant *models.Restaurant) e
 func (r *RestaurantRepository) AddMeal(ctx context.Context, meals *models.Meal) error {
 	_, err := r.MealsCollection.InsertOne(ctx, meals)
 	return err
+}
+
+func (r *RestaurantRepository) GetMealsByRestaurantID(ctx context.Context, restaurantID string) ([]models.Meal, error) {
+	cursor, err := r.MealsCollection.Find(ctx, bson.M{"restaurant_id": restaurantID})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var meals []models.Meal
+	if err := cursor.All(ctx, &meals); err != nil {
+		return nil, err
+	}
+
+	return meals, nil
+}
+
+func (r *RestaurantRepository) GetMealByID(ctx context.Context, mealId string) (*models.Meal, error) {
+	objectID, err := primitive.ObjectIDFromHex(mealId)
+	if err != nil {
+		return nil, errors.New("invalid meal ID format")
+	}
+
+	var meal models.Meal
+	err = r.MealsCollection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&meal)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &meal, nil
 }
