@@ -16,12 +16,14 @@ import (
 type UserHandler struct {
 	UserRepo       *repository.UserRepository
 	RestaurantGRPC  pb.RestaurantServiceClient
+	DonorGRPC  		pb.DonorServiceClient
 }
 
-func NewUserHandler(restaurantClient pb.RestaurantServiceClient) *UserHandler {
+func NewUserHandler(restaurantClient pb.RestaurantServiceClient, donorClient pb.DonorServiceClient) *UserHandler {
 	return &UserHandler{
 		UserRepo:       repository.NewUserRepository(),
 		RestaurantGRPC: restaurantClient,
+		DonorGRPC: 		donorClient,
 	}
 }
 
@@ -88,6 +90,38 @@ func (h *UserHandler) RegisterUser(c echo.Context) error {
 		_, err = h.RestaurantGRPC.CommitRestaurant(ctx, &pb.CommitRestaurantRequest{UserId: user.ID})
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to commit restaurant via gRPC"})
+		}
+	} else if req.UserType == "donor" {
+		if req.Name == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": "Name are required for user_type 'donor'",
+			})
+		}
+
+		donorRequest := &pb.PrepareDonorRequest{
+			UserId:  user.ID,
+			Name:    req.Name,
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		response, err := h.DonorGRPC.PrepareDonor(ctx, donorRequest)
+		if err != nil || !response.Success {
+			tx.Rollback()
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error": "Failed to create donor via gRPC: " + response.GetMessage(),
+			})
+		}
+
+		if err := h.UserRepo.CommitTransaction(tx); err != nil {
+			_, _ = h.DonorGRPC.RollbackDonor(ctx, &pb.RollbackDonorRequest{UserId: user.ID})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to commit user transaction"})
+		}
+
+		_, err = h.DonorGRPC.CommitDonor(ctx, &pb.CommitDonorRequest{UserId: user.ID})
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to commit donor via gRPC"})
 		}
 	}
 	return c.JSON(http.StatusCreated, map[string]string{"message": "User registered successfully"})

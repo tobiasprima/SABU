@@ -7,6 +7,7 @@ import (
 )
 
 type DonorRepository interface {
+	Create(donor *models.Donor) error
 	GetDonorByID(donorID string) (*models.Donor, error)
 }
 
@@ -16,6 +17,10 @@ type DonorRepositoryImpl struct {
 
 func NewDonorRepositoryImpl(db *gorm.DB) DonorRepository {
 	return &DonorRepositoryImpl{db}
+}
+
+func (dr *DonorRepositoryImpl) Create(donor *models.Donor) error {
+	return dr.DB.Create(donor).Error
 }
 
 func (dr *DonorRepositoryImpl) GetDonorByID(donorID string) (*models.Donor, error) {

@@ -7,8 +7,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func RegisterRoutes (e *echo.Echo, restaurantClient pb.RestaurantServiceClient) {
-	userHandler := handlers.NewUserHandler(restaurantClient)
+func RegisterRoutes (e *echo.Echo, restaurantClient pb.RestaurantServiceClient, donorClient pb.DonorServiceClient) {
+	userHandler := handlers.NewUserHandler(restaurantClient, donorClient)
 
 	e.POST("/user/register", userHandler.RegisterUser)
 	e.POST("/user/login", userHandler.LoginUser)
