@@ -19,15 +19,22 @@ func main(){
 		log.Fatalf("Database connection failed: %v", err)
 	}
 
-	grpcConn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	restaurantgRPCconn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to Restaurant service: %v", err)
 	}
-	defer grpcConn.Close()
+	defer restaurantgRPCconn.Close()
 
-	restaurantClient := pb.NewRestaurantServiceClient(grpcConn)
+	donorgRPCConn, err := grpc.Dial("localhost:50052", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to connect to Donor service: %v", err)
+	}
+	defer donorgRPCConn.Close()
 
-	routes.RegisterRoutes(e, restaurantClient)
+	restaurantClient := pb.NewRestaurantServiceClient(restaurantgRPCconn)
+	donorClient := pb.NewDonorServiceClient(donorgRPCConn)
+
+	routes.RegisterRoutes(e, restaurantClient, donorClient)
 
 	port := os.Getenv("PORT")
 	if port == "" {
