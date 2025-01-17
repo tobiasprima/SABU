@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package foundation;
+
+option go_package = "proto/pb;pb";
+
+service FoundationService {
+    rpc PrepareFoundation (PrepareFoundationRequest) returns (PrepareFoundationResponse);
+    rpc CommitFoundation (CommitFoundationRequest) returns (CommitFoundationResponse);
+    rpc RollbackFoundation (RollbackFoundationRequest) returns (RollbackFoundationResponse);
+}
+
+message PrepareFoundationRequest {
+    string user_id = 1;
+    string email = 2;
+    string name = 3;
+    string address = 4;
+}
+
+message PrepareFoundationResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message CommitFoundationRequest {
+    string user_id = 1;
+}
+
+message CommitFoundationResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message RollbackFoundationRequest{
+    string user_id = 1;
+}
+
+message RollbackFoundationResponse {
+    bool success = 1;
+    string message = 2;
+}
