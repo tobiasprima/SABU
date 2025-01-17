@@ -11,14 +11,25 @@ import (
 	"sabu-restaurant-service/proto/pb"
 	"sabu-restaurant-service/routes"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"google.golang.org/grpc"
 )
 
 func main(){
-	err := config.InitDB()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("failed to load .env file: %v", err)
+	}
+
+	err = config.InitDB()
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
+	}
+
+	err = config.InitMongo()
+	if err != nil {
+		log.Fatalf("Mongodb connection failed: %v", err)
 	}
 
 	grpcServer := grpc.NewServer()

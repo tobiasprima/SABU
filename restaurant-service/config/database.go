@@ -5,7 +5,6 @@ import (
 	"os"
 	"sabu-restaurant-service/models"
 
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -18,11 +17,6 @@ type DB struct {
 var Database *DB
 
 func InitDB() error{
-	err:= godotenv.Load()
-	if err != nil {
-		return fmt.Errorf("failed to load .env file: %v", err)
-	}
-
 	dsn := os.Getenv("SUPABASE_URL")
 	if dsn == "" {
 		return fmt.Errorf("SUPABASE_URL is not set in the environment")
