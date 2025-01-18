@@ -12,4 +12,5 @@ func RegisterRoutes(e *echo.Echo) {
 	e.POST("/restaurant/:restaurant_id/add-meal", restaurantHandler.AddMeal)
 	e.GET("/restaurant/:restaurant_id/get-meals", restaurantHandler.GetMealsByRestaurantID)
 	e.GET("/restaurant/get-meal/:meal_id", restaurantHandler.GetMealByID)
+	e.PATCH("/restaurant/update-meal/:meal_id", restaurantHandler.UpdateMeal)
 }

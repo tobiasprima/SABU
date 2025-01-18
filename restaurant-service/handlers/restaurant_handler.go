@@ -7,6 +7,7 @@ import (
 	"sabu-restaurant-service/repository"
 
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type RestaurantHandler struct {
@@ -91,4 +92,43 @@ func (h *RestaurantHandler) GetMealByID(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{"data": meal})
+}
+
+func (h *RestaurantHandler) UpdateMeal(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	mealId := c.Param("meal_id")
+	if mealId == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Meal ID is required"})
+	}
+
+	var updates map[string]interface{}
+	if err := c.Bind(&updates); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
+	}
+
+	validUpdates := bson.M{}
+	if name, ok := updates["name"].(string); ok && name != "" {
+		validUpdates["name"] = name
+	}
+	if description, ok := updates["description"].(string); ok && description != ""{
+		validUpdates["description"] = description
+	}
+	if price, ok := updates["price"].(float64); ok && price > 0 {
+		validUpdates["price"] = price
+	}
+	if stock, ok := updates["stock"].(int); ok && stock >= 0 {
+		validUpdates["stock"] = stock
+	}
+
+	if len(validUpdates) == 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "No valid fields to update"})
+	}
+
+	err := h.RestaurantRepo.UpdateMeal(ctx, mealId, validUpdates)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update meal"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Meal updated successfully"})
 }
