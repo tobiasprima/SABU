@@ -9,5 +9,7 @@ import (
 func RegisterRoutes(e *echo.Echo, dh handlers.DonorHandler) {
 	e.GET("/donor/:id", dh.GetDonorByID)
 	e.POST("/donor/top-up/:donorID", dh.TopUp)
-	// e.POST("/donor/update-top-up", dh.UpdateTopUpStatus)
+
+	// Webhook endpoint
+	e.POST("/donor/update-top-up", dh.UpdateTopUpStatus)
 }

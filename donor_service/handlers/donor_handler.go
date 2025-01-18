@@ -6,6 +6,7 @@ import (
 	"donor-service/repository"
 	"donor-service/service"
 	"net/http"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -90,6 +91,32 @@ func (dh *DonorHandler) TopUp(c echo.Context) error {
 	return c.JSON(http.StatusCreated, topUp)
 }
 
-// func (dh *DonorHandler) UpdateTopUpStatus(c echo.Context) error {
-// 	return nil
-// }
+func (dh *DonorHandler) UpdateTopUpStatus(c echo.Context) error {
+	webhookToken := c.Request().Header.Get("x-callback-token")
+	if webhookToken != os.Getenv("XENDIT_WEBHOOK_TOKEN") {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Invalid webhook token"})
+	}
+
+	req := new(dtos.XenditWebhookRequest)
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
+	}
+
+	topUp, err := dh.DonorRepository.GetTopUpByID(req.ExternalID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{"message": "Top up not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve top up detail"})
+	}
+
+	if err := dh.DonorRepository.UpdateTopUpStatus(topUp, req.CompletedAt, req.Status, req.PaymentMethod); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update top up status"})
+	}
+
+	if err := dh.DonorRepository.UpdateDonorBalance(topUp.DonorID, topUp.Amount); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update donor balance"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Successfully updated top up status"})
+}
