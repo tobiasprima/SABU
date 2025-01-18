@@ -15,6 +15,8 @@ type DonorRepository interface {
 	GetTopUpByID(topUpID string) (*models.TopUp, error)
 	GetTopUpHistory(donorID string) ([]models.TopUp, error)
 	UpdateTopUpStatus(topUp *models.TopUp, completedAt time.Time, status, paymentMethod string) error
+	// CreateDonation()
+	GetDonationHistory(donorID string) ([]models.Donation, error)
 }
 
 type DonorRepositoryImpl struct {
@@ -70,4 +72,14 @@ func (dr *DonorRepositoryImpl) GetTopUpHistory(donorID string) ([]models.TopUp, 
 
 func (dr *DonorRepositoryImpl) UpdateTopUpStatus(topUp *models.TopUp, completedAt time.Time, status, paymentMethod string) error {
 	return dr.DB.Model(topUp).Select("payment_method", "status", "completed_at").Updates(models.TopUp{PaymentMethod: paymentMethod, Status: status, CompletedAt: &completedAt}).Error
+}
+
+func (dr *DonorRepositoryImpl) GetDonationHistory(donorID string) ([]models.Donation, error) {
+	var donations []models.Donation
+
+	if err := dr.DB.Where("donor_id = ?", donorID).Find(&donations).Error; err != nil {
+		return nil, err
+	}
+
+	return donations, nil
 }

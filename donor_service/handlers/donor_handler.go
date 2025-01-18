@@ -31,9 +31,9 @@ func (dh *DonorHandler) GetDonorByID(c echo.Context) error {
 	donor, err := dh.DonorRepository.GetDonorByID(donorID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return echo.NewHTTPError(http.StatusNotFound, map[string]string{"message": "Donor not found"})
+			return c.JSON(http.StatusNotFound, map[string]string{"message": "Donor not found"})
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve donor detail"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve donor detail"})
 	}
 
 	res := dtos.DonorData{
@@ -141,5 +141,20 @@ func (dh *DonorHandler) UpdateTopUpStatus(c echo.Context) error {
 }
 
 func (dh *DonorHandler) GetDonationHistory(c echo.Context) error {
-	return nil
+	donorID := c.Param("donorID")
+
+	_, err := dh.DonorRepository.GetDonorByID(donorID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{"message": "Top up not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve top up detail"})
+	}
+
+	donations, err := dh.DonorRepository.GetDonationHistory(donorID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve donation history"})
+	}
+
+	return c.JSON(http.StatusOK, donations)
 }
