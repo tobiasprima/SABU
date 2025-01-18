@@ -51,7 +51,7 @@ func (r *RestaurantRepository) GetMealsByRestaurantID(ctx context.Context, resta
 func (r *RestaurantRepository) GetMealByID(ctx context.Context, mealId string) (*models.Meal, error) {
 	objectID, err := primitive.ObjectIDFromHex(mealId)
 	if err != nil {
-		return nil, errors.New("invalid meal ID format")
+		return nil, errors.New("Invalid meal ID format")
 	}
 
 	var meal models.Meal
@@ -64,4 +64,17 @@ func (r *RestaurantRepository) GetMealByID(ctx context.Context, mealId string) (
 	}
 
 	return &meal, nil
+}
+
+func (r *RestaurantRepository) UpdateMeal(ctx context.Context, mealId string, updates bson.M) error {
+	objectID, err := primitive.ObjectIDFromHex(mealId)
+	if err != nil {
+		return errors.New("Invalid meal ID format")
+	}
+
+	filter := bson.M{"_id": objectID}
+	update := bson.M{"$set": updates}
+
+	_, err = r.MealsCollection.UpdateOne(ctx, filter, update)
+	return err
 }
