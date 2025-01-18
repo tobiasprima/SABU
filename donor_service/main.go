@@ -7,6 +7,7 @@ import (
 	"donor-service/proto/pb"
 	"donor-service/repository"
 	"donor-service/routes"
+	"donor-service/service"
 	"log"
 	"net"
 	"os"
@@ -53,7 +54,8 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	donorHandler := handlers.NewDonorHandlerImpl(donorRepository)
+	paymentService := service.NewPaymentService(os.Getenv("XENDIT_API_KEY"))
+	donorHandler := handlers.NewDonorHandlerImpl(donorRepository, paymentService)
 
 	routes.RegisterRoutes(e, *donorHandler)
 
