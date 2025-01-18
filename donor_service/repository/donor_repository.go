@@ -9,6 +9,7 @@ import (
 type DonorRepository interface {
 	Create(donor *models.Donor) error
 	GetDonorByID(donorID string) (*models.Donor, error)
+	TopUp(topUp *models.TopUp) error
 }
 
 type DonorRepositoryImpl struct {
@@ -31,4 +32,8 @@ func (dr *DonorRepositoryImpl) GetDonorByID(donorID string) (*models.Donor, erro
 	}
 
 	return donor, nil
+}
+
+func (dr *DonorRepositoryImpl) TopUp(topUp *models.TopUp) error {
+	return dr.DB.Create(topUp).Error
 }
