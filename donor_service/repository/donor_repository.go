@@ -13,6 +13,7 @@ type DonorRepository interface {
 	UpdateDonorBalance(donorID string, amount float64) error
 	TopUp(topUp *models.TopUp) error
 	GetTopUpByID(topUpID string) (*models.TopUp, error)
+	GetTopUpHistory(donorID string) ([]models.TopUp, error)
 	UpdateTopUpStatus(topUp *models.TopUp, completedAt time.Time, status, paymentMethod string) error
 }
 
@@ -55,6 +56,16 @@ func (dr *DonorRepositoryImpl) GetTopUpByID(topUpID string) (*models.TopUp, erro
 	}
 
 	return topUp, nil
+}
+
+func (dr *DonorRepositoryImpl) GetTopUpHistory(donorID string) ([]models.TopUp, error) {
+	var topUps []models.TopUp
+
+	if err := dr.DB.Where("donor_id = ?", donorID).Find(&topUps).Error; err != nil {
+		return nil, err
+	}
+
+	return topUps, nil
 }
 
 func (dr *DonorRepositoryImpl) UpdateTopUpStatus(topUp *models.TopUp, completedAt time.Time, status, paymentMethod string) error {

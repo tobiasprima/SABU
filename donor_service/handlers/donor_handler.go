@@ -91,6 +91,25 @@ func (dh *DonorHandler) TopUp(c echo.Context) error {
 	return c.JSON(http.StatusCreated, topUp)
 }
 
+func (dh *DonorHandler) GetTopUpHistory(c echo.Context) error {
+	donorID := c.Param("donorID")
+
+	_, err := dh.DonorRepository.GetDonorByID(donorID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{"message": "Donor not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve donor detail"})
+	}
+
+	topUps, err := dh.DonorRepository.GetTopUpHistory(donorID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve top up history"})
+	}
+
+	return c.JSON(http.StatusOK, topUps)
+}
+
 func (dh *DonorHandler) UpdateTopUpStatus(c echo.Context) error {
 	webhookToken := c.Request().Header.Get("x-callback-token")
 	if webhookToken != os.Getenv("XENDIT_WEBHOOK_TOKEN") {
