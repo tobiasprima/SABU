@@ -28,6 +28,19 @@ func (r *RestaurantRepository) CreateRestaurant(restaurant *models.Restaurant) e
 	return r.DB.Create(restaurant).Error
 }
 
+func (r *RestaurantRepository) GetRestaurantByID(restaurantID string) (*models.Restaurant, error) {
+	var restaurant models.Restaurant
+
+	err := r.DB.Where("ID = ?", restaurantID).First(&restaurant).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &restaurant, nil
+}
+
 func (r *RestaurantRepository) AddMeal(ctx context.Context, meals *models.Meal) error {
 	_, err := r.MealsCollection.InsertOne(ctx, meals)
 	return err
