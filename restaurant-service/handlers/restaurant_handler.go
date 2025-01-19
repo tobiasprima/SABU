@@ -20,6 +20,29 @@ func NewRestaurantHandler() *RestaurantHandler {
 	}
 }
 
+func (h *RestaurantHandler) GetRestaurantByID(c echo.Context) error {
+	restaurantID := c.Param("restaurant_id")
+	if restaurantID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Restaurant ID is required"})
+	}
+
+	restaurant, err := h.RestaurantRepo.GetRestaurantByID(restaurantID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to get restaurant"})
+	}
+
+	if restaurant == nil {
+		return c.JSON(http.StatusNotFound, map[string]interface{}{
+			"error": "Restaurant not found",
+			"data": nil,
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"data": restaurant,
+	})
+}
+
 func (h *RestaurantHandler) AddMeal(c echo.Context) error {
 	ctx := c.Request().Context()
 	req := new(dtos.AddMealRequest)
