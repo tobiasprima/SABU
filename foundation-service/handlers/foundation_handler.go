@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"foundation-service/dtos"
+	"foundation-service/models"
 	"foundation-service/repository"
 	"net/http"
 
@@ -18,7 +19,7 @@ func NewFoundationHandlerImpl(foundationRepository repository.FoundationReposito
 }
 
 func (fh *FoundationHandler) GetFoundationByID(c echo.Context) error {
-	foundationID := c.Param("id")
+	foundationID := c.Param("foundation_id")
 
 	foundation, err := fh.FoundationRepository.GetFoundationByID(foundationID)
 	if err != nil {
@@ -36,4 +37,97 @@ func (fh *FoundationHandler) GetFoundationByID(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, res)
+}
+
+func (fh *FoundationHandler) AddOrder(c echo.Context) error {
+	foundationID := c.Param("foundation_id")
+	if foundationID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Foundation ID is required"})
+	}
+
+	req := new(dtos.OrderRequest)
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
+	}
+
+	orderlist := &models.OrderList{
+		FoundationID: foundationID,
+		Status:       "unpaid",
+	}
+
+	if err := fh.FoundationRepository.AddOrderlist(orderlist); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to add orderlist"})
+	}
+
+	var orders []models.Order
+	for _, orderReq := range req.Orders {
+		order := models.Order{
+			OrderListID:     orderlist.ID,
+			MealsID:         orderReq.MealsID,
+			DesiredQuantity: orderReq.DesiredQuantity,
+			Quantity:        0,
+		}
+		orders = append(orders, order)
+	}
+
+	if err := fh.FoundationRepository.AddOrders(orders); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to add orders"})
+	}
+
+	return c.JSON(http.StatusCreated, map[string]interface{}{
+		"message":   "Orderlist and orders added successfully",
+		"orderlist": orderlist,
+		"orders":    orders,
+	})
+}
+
+func (fh *FoundationHandler) GetOrder(c echo.Context) error {
+	// Extract orderlist_id from the URL parameter
+	orderlistID := c.Param("orderlist_id")
+	if orderlistID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Orderlist ID is required"})
+	}
+
+	// Fetch the OrderList from the database
+	var orderlist models.OrderList
+	if err := fh.FoundationRepository.GetOrderlistByID(orderlistID, &orderlist); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Orderlist not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch orderlist"})
+	}
+
+	// Fetch the Orders associated with the OrderList
+	var orders []models.Order
+	if err := fh.FoundationRepository.GetOrdersByOrderlistID(orderlistID, &orders); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch orders"})
+	}
+
+	// Combine the OrderList and Orders into a response
+	response := map[string]interface{}{
+		"orderlist": orderlist,
+		"orders":    orders,
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (fh *FoundationHandler) GetOrderById(c echo.Context) error {
+	// Extract order_id from URL parameter
+	orderID := c.Param("order_id")
+	if orderID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Order ID is required"})
+	}
+
+	// Fetch the order by ID
+	order, err := fh.FoundationRepository.GetOrderByID(orderID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Order not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch order"})
+	}
+
+	// Return the order in the response
+	return c.JSON(http.StatusOK, order)
 }
