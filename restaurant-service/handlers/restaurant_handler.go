@@ -20,6 +20,24 @@ func NewRestaurantHandler() *RestaurantHandler {
 	}
 }
 
+func (h *RestaurantHandler) GetRestaurants(c echo.Context) error {
+	restaurants, err := h.RestaurantRepo.GetRestaurants()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch restaurants"})
+	}
+
+	if len(restaurants) == 0 {
+		return c.JSON(http.StatusNotFound, map[string]interface{}{
+			"error": "Restaurant",
+			"data": nil,
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"data": restaurants,
+	})
+}
+
 func (h *RestaurantHandler) GetRestaurantByID(c echo.Context) error {
 	restaurantID := c.Param("restaurant_id")
 	if restaurantID == "" {
@@ -89,8 +107,9 @@ func (h *RestaurantHandler) GetMealsByRestaurantID(c echo.Context) error {
 	}
 
 	if len(meals) == 0 {
-		return c.JSON(http.StatusNotFound, map[string]string{
+		return c.JSON(http.StatusNotFound, map[string]interface{}{
 			"error": "No meals found for the specified restaurant ID",
+			"data": nil,
 		})
 	}
 
@@ -111,7 +130,10 @@ func (h *RestaurantHandler) GetMealByID(c echo.Context) error {
 	}
 
 	if meal == nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "Meal not found"})
+		return c.JSON(http.StatusNotFound, map[string]interface{}{
+			"error": "Meal not found",
+			"data": nil,
+		})
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{"data": meal})
