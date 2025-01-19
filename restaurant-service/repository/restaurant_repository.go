@@ -78,3 +78,22 @@ func (r *RestaurantRepository) UpdateMeal(ctx context.Context, mealId string, up
 	_, err = r.MealsCollection.UpdateOne(ctx, filter, update)
 	return err
 }
+
+func (r *RestaurantRepository) DeleteMeal(ctx context.Context, mealId string) error {
+	objectID, err := primitive.ObjectIDFromHex(mealId)
+	if err != nil {
+		return errors.New("Invalid meal ID format")
+	}
+
+	filter := bson.M{"_id": objectID}
+	result, err := r.MealsCollection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+
+	return nil
+}

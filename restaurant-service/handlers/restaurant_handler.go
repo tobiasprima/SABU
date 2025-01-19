@@ -132,3 +132,19 @@ func (h *RestaurantHandler) UpdateMeal(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Meal updated successfully"})
 }
+
+func (h *RestaurantHandler) DeleteMeal(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	mealId := c.Param("meal_id")
+	if mealId == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Meal ID is required"})
+	}
+
+	err := h.RestaurantRepo.DeleteMeal(ctx, mealId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete meal"})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Meal deleted successfully"})
+}
