@@ -129,7 +129,7 @@ func (dh *DonorHandler) UpdateTopUpStatus(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update top up status"})
 	}
 
-	if err := dh.DonorRepository.UpdateDonorBalance(topUp.DonorID, topUp.Amount); err != nil {
+	if err := dh.DonorRepository.AddDonorBalance(topUp.DonorID, topUp.Amount); err != nil {
 		if err.Error() == "not found" {
 			return c.JSON(http.StatusNotFound, map[string]string{"message": "Donor not found"})
 		}

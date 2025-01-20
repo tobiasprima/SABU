@@ -12,7 +12,7 @@ import (
 type DonorRepository interface {
 	Create(donor *models.Donor) error
 	GetDonorByID(donorID string) (*models.Donor, error)
-	UpdateDonorBalance(donorID string, amount float64) error
+	AddDonorBalance(donorID string, amount float64) error
 	TopUp(topUp *models.TopUp) error
 	GetTopUpByID(topUpID string) (*models.TopUp, error)
 	GetTopUpHistory(donorID string) ([]models.TopUp, error)
@@ -41,7 +41,7 @@ func (dr *DonorRepositoryImpl) GetDonorByID(donorID string) (*models.Donor, erro
 	return donor, nil
 }
 
-func (dr *DonorRepositoryImpl) UpdateDonorBalance(donorID string, amount float64) error {
+func (dr *DonorRepositoryImpl) AddDonorBalance(donorID string, amount float64) error {
 	donor := models.Donor{ID: donorID}
 	res := dr.DB.Model(&donor).Update("balance", gorm.Expr("balance + ?", amount))
 	if res.Error != nil {
