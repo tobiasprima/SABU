@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type DonorRepository interface {
@@ -15,7 +16,7 @@ type DonorRepository interface {
 	TopUp(topUp *models.TopUp) error
 	GetTopUpByID(topUpID string) (*models.TopUp, error)
 	GetTopUpHistory(donorID string) ([]models.TopUp, error)
-	UpdateTopUpStatus(topUp *models.TopUp, completedAt time.Time, status, paymentMethod string) error
+	UpdateTopUpStatus(topUpID, status, paymentMethod string, completedAt time.Time) (*models.TopUp, error)
 }
 
 type DonorRepositoryImpl struct {
@@ -78,6 +79,18 @@ func (dr *DonorRepositoryImpl) GetTopUpHistory(donorID string) ([]models.TopUp, 
 	return topUps, nil
 }
 
-func (dr *DonorRepositoryImpl) UpdateTopUpStatus(topUp *models.TopUp, completedAt time.Time, status, paymentMethod string) error {
-	return dr.DB.Model(topUp).Select("payment_method", "status", "completed_at").Updates(models.TopUp{PaymentMethod: paymentMethod, Status: status, CompletedAt: &completedAt}).Error
+func (dr *DonorRepositoryImpl) UpdateTopUpStatus(topUpID, status, paymentMethod string, completedAt time.Time) (*models.TopUp, error) {
+	topUp := models.TopUp{ID: topUpID}
+	res := dr.DB.Model(&topUp).Clauses(clause.Returning{Columns: []clause.Column{{Name: "donor_id"}, {Name: "amount"}}}).
+		Select("payment_method", "status", "completed_at").
+		Updates(models.TopUp{PaymentMethod: paymentMethod, Status: status, CompletedAt: &completedAt})
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return nil, errors.New("not found")
+	}
+
+	return &topUp, nil
 }
