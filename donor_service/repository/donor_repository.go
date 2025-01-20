@@ -2,6 +2,7 @@ package repository
 
 import (
 	"donor-service/models"
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -41,7 +42,16 @@ func (dr *DonorRepositoryImpl) GetDonorByID(donorID string) (*models.Donor, erro
 
 func (dr *DonorRepositoryImpl) UpdateDonorBalance(donorID string, amount float64) error {
 	donor := models.Donor{ID: donorID}
-	return dr.DB.Model(&donor).Update("balance", amount).Error
+	res := dr.DB.Model(&donor).Update("balance", gorm.Expr("balance + ?", amount))
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return errors.New("not found")
+	}
+
+	return nil
 }
 
 func (dr *DonorRepositoryImpl) TopUp(topUp *models.TopUp) error {
