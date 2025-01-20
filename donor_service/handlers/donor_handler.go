@@ -140,6 +140,83 @@ func (dh *DonorHandler) UpdateTopUpStatus(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "Successfully updated top up status"})
 }
 
+func (dh *DonorHandler) Donate(c echo.Context) error {
+	donorID := c.Param("donorID")
+
+	req := new(dtos.DonateRequest)
+
+	if err := c.Bind(req); err != nil || req.Quantity <= 0 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
+	}
+
+	// Check if donor exist based on donor id (database)
+	donor, err := dh.DonorRepository.GetDonorByID(donorID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{"message": "Donor not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve donor detail"})
+	}
+
+	// Check if order exist based on order id (database)
+
+	// Check if order quantity == desired quantity
+
+	// Start transaction
+	tx, err := dh.DonorRepository.BeginTransaction()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
+
+	// Get meals detail with meals id (database)
+
+	// Check if requested quantity is bigger than meals.Stock or not
+	if req.Quantity > meals.Stock {
+		return err
+	}
+
+	// Calculate total price and check if donor has sufficient balance
+	totalPrice := meals.Price * req.Quantity
+	if totalPrice > donor.Balance {
+		return err
+	}
+
+	// Deduct meals stock and update meals table (database)
+	meals.Stock -= req.Quantity
+
+	// Deduct donor balance and update donor table (database)
+	donor.Balance -= totalPrice
+
+	// Add orders quantity and update orders table (database)
+	orders.Quantity += req.Quantity
+
+	// Check if added orders quantity is bigger than desired quantity
+
+	// Check if orders quantity == desired quantity
+	if orders.Quantity == orders.DesiredQuantity {
+		// Get the all order by order list id except current order (database)
+
+		// Check if all orders within the order list is fulfilled
+
+		// Update order list status (database)
+
+	}
+
+	donation := &models.Donation{
+		OrderID:  req.OrderID,
+		DonorID:  donorID,
+		Quantity: req.Quantity,
+	}
+
+	// Create donation (database)
+	if err := dh.DonorRepository.CreateDonation(tx, donation); err != nil {
+		tx.Rollback()
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to donate"})
+	}
+
+	return nil
+}
+
 func (dh *DonorHandler) GetDonationHistory(c echo.Context) error {
 	donorID := c.Param("donorID")
 
@@ -158,3 +235,15 @@ func (dh *DonorHandler) GetDonationHistory(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, donations)
 }
+
+// Meals
+// Get by ID
+// Request {meals_id}
+// Response {*}
+
+// Update meals stock
+// Request {meals_id, stock}
+// Response {}
+
+// Foundations
+// Check if order exist based on order id (database)

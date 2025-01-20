@@ -8,6 +8,7 @@ import (
 )
 
 type DonorRepository interface {
+	BeginTransaction() (*gorm.DB, error)
 	Create(donor *models.Donor) error
 	GetDonorByID(donorID string) (*models.Donor, error)
 	UpdateDonorBalance(donorID string, amount float64) error
@@ -15,7 +16,7 @@ type DonorRepository interface {
 	GetTopUpByID(topUpID string) (*models.TopUp, error)
 	GetTopUpHistory(donorID string) ([]models.TopUp, error)
 	UpdateTopUpStatus(topUp *models.TopUp, completedAt time.Time, status, paymentMethod string) error
-	// CreateDonation()
+	CreateDonation(tx *gorm.DB, donation *models.Donation) error
 	GetDonationHistory(donorID string) ([]models.Donation, error)
 }
 
@@ -25,6 +26,15 @@ type DonorRepositoryImpl struct {
 
 func NewDonorRepositoryImpl(db *gorm.DB) DonorRepository {
 	return &DonorRepositoryImpl{db}
+}
+
+func (dr *DonorRepositoryImpl) BeginTransaction() (*gorm.DB, error) {
+	tx := dr.DB.Begin()
+	if err := tx.Error; err != nil {
+		return nil, err
+	}
+
+	return tx, nil
 }
 
 func (dr *DonorRepositoryImpl) Create(donor *models.Donor) error {
@@ -72,6 +82,10 @@ func (dr *DonorRepositoryImpl) GetTopUpHistory(donorID string) ([]models.TopUp, 
 
 func (dr *DonorRepositoryImpl) UpdateTopUpStatus(topUp *models.TopUp, completedAt time.Time, status, paymentMethod string) error {
 	return dr.DB.Model(topUp).Select("payment_method", "status", "completed_at").Updates(models.TopUp{PaymentMethod: paymentMethod, Status: status, CompletedAt: &completedAt}).Error
+}
+
+func (dr *DonorRepositoryImpl) CreateDonation(tx *gorm.DB, donation *models.Donation) error {
+	return tx.Create(donation).Error
 }
 
 func (dr *DonorRepositoryImpl) GetDonationHistory(donorID string) ([]models.Donation, error) {
