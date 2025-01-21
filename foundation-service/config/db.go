@@ -8,6 +8,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func InitDB() (*gorm.DB, error) {
@@ -19,10 +20,16 @@ func InitDB() (*gorm.DB, error) {
 		os.Getenv("DB_PORT"),
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
+
+	// if err := db.AutoMigrate(&models.Order{}); err != nil {
+	// 	return nil, fmt.Errorf("failed to migrate schema: %v", err)
+	// }
 
 	return db, nil
 }
