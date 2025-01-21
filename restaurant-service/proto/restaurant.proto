@@ -8,6 +8,10 @@ service RestaurantService {
   rpc PrepareRestaurant (PrepareRestaurantRequest) returns (PrepareRestaurantResponse);
   rpc CommitRestaurant (CommitRestaurantRequest) returns (CommitRestaurantResponse);
   rpc RollbackRestaurant (RollbackRestaurantRequest) returns (RollbackRestaurantResponse);
+  rpc GetMealByID (MealID) returns (GetMealByIDResponse);
+  rpc PrepareDeductMealStock (PrepareDeductMealStockRequest) returns (PrepareDeductMealStockResponse);
+  rpc CommitDeductMealStock (CommitDeductMealStockRequest) returns (CommitDeductMealStockResponse);
+  rpc RollbackDeductMealStock (RollbackDeductMealStockRequest) returns (RollbackDeductMealStockResponse);
 }
 
 message PrepareRestaurantRequest {
@@ -36,6 +40,48 @@ message RollbackRestaurantRequest {
 }
 
 message RollbackRestaurantResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message MealID {
+  string id = 1;
+}
+
+message GetMealByIDResponse {
+  string id = 1;
+	string restaurant_id = 2;
+	string name = 3;
+	string description = 4;
+	float price = 5;
+	uint32 stock = 6;
+}
+
+message PrepareDeductMealStockRequest {
+  string donation_id = 1;
+  string meal_id = 2;
+  uint32 quantity = 3;
+}
+
+message PrepareDeductMealStockResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message CommitDeductMealStockRequest {
+  string donation_id = 1;
+}
+
+message CommitDeductMealStockResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RollbackDeductMealStockRequest {
+  string donation_id = 1;
+}
+
+message RollbackDeductMealStockResponse {
   bool success = 1;
   string message = 2;
 }
