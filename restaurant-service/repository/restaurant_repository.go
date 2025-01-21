@@ -28,6 +28,12 @@ func (r *RestaurantRepository) CreateRestaurant(restaurant *models.Restaurant) e
 	return r.DB.Create(restaurant).Error
 }
 
+func (r *RestaurantRepository) GetRestaurants() ([]models.Restaurant, error) {
+	var restaurants []models.Restaurant
+	err := r.DB.Find(&restaurants).Error
+	return restaurants, err
+}
+
 func (r *RestaurantRepository) GetRestaurantByID(restaurantID string) (*models.Restaurant, error) {
 	var restaurant models.Restaurant
 
