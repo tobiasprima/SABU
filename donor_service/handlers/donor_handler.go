@@ -265,7 +265,7 @@ func (dh *DonorHandler) Donate(c echo.Context) error {
 	}
 
 	// Create donation
-	if err := dh.DonorRepository.CreateDonation(tx, donation); err == nil {
+	if err := dh.DonorRepository.CreateDonation(tx, donation); err != nil {
 		_, _ = dh.RestaurantClient.RollbackDeductMealStock(ctx, &pb.RollbackDeductMealStockRequest{DonationId: donationID})
 		_, _ = dh.FoundationClient.RollbackAddOrderQuantity(ctx, &pb.RollbackAddOrderQuantityRequest{DonationId: donationID})
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to donate"})
