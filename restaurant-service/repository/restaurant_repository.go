@@ -30,7 +30,7 @@ func (r *RestaurantRepository) CreateRestaurant(restaurant *models.Restaurant) e
 
 func (r *RestaurantRepository) GetRestaurants() ([]models.Restaurant, error) {
 	var restaurants []models.Restaurant
-	err := r.DB.Preload("Name").Find(&restaurants).Error
+	err := r.DB.Find(&restaurants).Error
 	return restaurants, err
 }
 

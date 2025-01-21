@@ -28,7 +28,7 @@ func (h *RestaurantHandler) GetRestaurants(c echo.Context) error {
 
 	if len(restaurants) == 0 {
 		return c.JSON(http.StatusNotFound, map[string]interface{}{
-			"error": "Restaurant",
+			"error": "No Restaurants Found",
 			"data": nil,
 		})
 	}
