@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"context"
 	"donor-service/dtos"
 	"donor-service/models"
+	"donor-service/proto/pb"
 	"donor-service/repository"
 	"donor-service/service"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -14,14 +17,18 @@ import (
 )
 
 type DonorHandler struct {
-	DonorRepository repository.DonorRepository
-	PaymentService  service.PaymentService
+	DonorRepository  repository.DonorRepository
+	PaymentService   service.PaymentService
+	FoundationClient pb.FoundationServiceClient
+	RestaurantClient pb.RestaurantServiceClient
 }
 
-func NewDonorHandlerImpl(donorRepository repository.DonorRepository, paymentService service.PaymentService) *DonorHandler {
+func NewDonorHandlerImpl(donorRepository repository.DonorRepository, paymentService service.PaymentService, foundationClient pb.FoundationServiceClient, restaurantClient pb.RestaurantServiceClient) *DonorHandler {
 	return &DonorHandler{
-		DonorRepository: donorRepository,
-		PaymentService:  paymentService,
+		DonorRepository:  donorRepository,
+		PaymentService:   paymentService,
+		FoundationClient: foundationClient,
+		RestaurantClient: restaurantClient,
 	}
 }
 
@@ -159,62 +166,129 @@ func (dh *DonorHandler) Donate(c echo.Context) error {
 	}
 
 	// Check if order exist based on order id (database)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	orders, err := dh.FoundationClient.GetOrderByID(ctx, &pb.OrderID{Id: req.OrderID})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
 
 	// Check if order quantity == desired quantity
+	if orders.Quantity == orders.DesiredQuantity {
+		return c.JSON(http.StatusUnprocessableEntity, map[string]string{"message": "This order has met it's desired quantity"})
+	}
+
+	// Check if added orders quantity is bigger than desired quantity
+	orders.Quantity += req.Quantity
+	if orders.Quantity > orders.DesiredQuantity {
+		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid quantity"})
+	}
+
+	// Get meals detail with meals id (database)
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	meal, err := dh.RestaurantClient.GetMealByID(ctx, &pb.MealID{Id: orders.MealsId})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
+
+	// Check if requested quantity is bigger than meal stock
+	if req.Quantity > meal.Stock {
+		return c.JSON(http.StatusUnprocessableEntity, map[string]string{"message": "Quantity is larger than meal stock"})
+	}
+
+	// Calculate total price and check if donor has sufficient balance
+	totalPrice := meal.Price * float32(req.Quantity)
+	if totalPrice > float32(donor.Balance) {
+		return c.JSON(http.StatusUnprocessableEntity, map[string]string{"message": "Insufficient balance"})
+	}
+
+	donationID := uuid.New().String()
+
+	// Deduct meals stock and update meals table (database)
+	mealRequest := &pb.PrepareDeductMealStockRequest{
+		DonationId: donationID,
+		MealId:     meal.Id,
+		Quantity:   req.Quantity,
+	}
+
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	response, err := dh.RestaurantClient.PrepareDeductMealStock(ctx, mealRequest)
+	if err != nil || !response.Success {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to update meal via gRPC: " + response.GetMessage(),
+		})
+	}
 
 	// Start transaction
 	tx, err := dh.DonorRepository.BeginTransaction()
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
+	defer tx.Rollback()
 
-	// Get meals detail with meals id (database)
-
-	// Check if requested quantity is bigger than meals.Stock or not
-	if req.Quantity > meals.Stock {
-		return err
+	// Deduct donor balance
+	if err := dh.DonorRepository.DeductDonorBalance(tx, donorID, float64(totalPrice)); err != nil {
+		_, _ = dh.RestaurantClient.RollbackDeductMealStock(ctx, &pb.RollbackDeductMealStockRequest{DonationId: donationID})
+		if err.Error() == "not found" {
+			return c.JSON(http.StatusNotFound, map[string]string{"message": "Donor not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to deduct donor balance"})
 	}
 
-	// Calculate total price and check if donor has sufficient balance
-	totalPrice := meals.Price * req.Quantity
-	if totalPrice > donor.Balance {
-		return err
+	// Update orders table
+	order := &pb.PrepareAddOrderQuantityRequest{
+		DonationId: donationID,
+		OrderId:    orders.Id,
+		Quantity:   req.Quantity,
 	}
 
-	// Deduct meals stock and update meals table (database)
-	meals.Stock -= req.Quantity
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	// Deduct donor balance and update donor table (database)
-	donor.Balance -= totalPrice
-
-	// Add orders quantity and update orders table (database)
-	orders.Quantity += req.Quantity
-
-	// Check if added orders quantity is bigger than desired quantity
-
-	// Check if orders quantity == desired quantity
-	if orders.Quantity == orders.DesiredQuantity {
-		// Get the all order by order list id except current order (database)
-
-		// Check if all orders within the order list is fulfilled
-
-		// Update order list status (database)
-
+	response2, err := dh.FoundationClient.PrepareAddOrderQuantity(ctx, order)
+	if err != nil || !response2.Success {
+		_, _ = dh.RestaurantClient.RollbackDeductMealStock(ctx, &pb.RollbackDeductMealStockRequest{DonationId: donationID})
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "Failed to update order via gRPC: " + response2.GetMessage(),
+		})
 	}
 
 	donation := &models.Donation{
+		ID:       donationID,
 		OrderID:  req.OrderID,
 		DonorID:  donorID,
 		Quantity: req.Quantity,
 	}
 
-	// Create donation (database)
-	if err := dh.DonorRepository.CreateDonation(tx, donation); err != nil {
-		tx.Rollback()
+	// Create donation
+	if err := dh.DonorRepository.CreateDonation(tx, donation); err == nil {
+		_, _ = dh.RestaurantClient.RollbackDeductMealStock(ctx, &pb.RollbackDeductMealStockRequest{DonationId: donationID})
+		_, _ = dh.FoundationClient.RollbackAddOrderQuantity(ctx, &pb.RollbackAddOrderQuantityRequest{DonationId: donationID})
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to donate"})
 	}
 
-	return nil
+	if err := tx.Commit().Error; err != nil {
+		_, _ = dh.RestaurantClient.RollbackDeductMealStock(ctx, &pb.RollbackDeductMealStockRequest{DonationId: donationID})
+		_, _ = dh.FoundationClient.RollbackAddOrderQuantity(ctx, &pb.RollbackAddOrderQuantityRequest{DonationId: donationID})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to commit donation transaction"})
+	}
+
+	_, err = dh.RestaurantClient.CommitDeductMealStock(ctx, &pb.CommitDeductMealStockRequest{DonationId: donationID})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to commit meal via gRPC"})
+	}
+
+	_, err = dh.FoundationClient.CommitAddOrderQuantity(ctx, &pb.CommitAddOrderQuantityRequest{DonationId: donationID})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to commit add order quantity via gRPC"})
+	}
+
+	return c.JSON(http.StatusOK, donation)
 }
 
 func (dh *DonorHandler) GetDonationHistory(c echo.Context) error {
