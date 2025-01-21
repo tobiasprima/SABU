@@ -128,19 +128,18 @@ func (dh *DonorHandler) UpdateTopUpStatus(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Invalid input"})
 	}
 
-	topUp, err := dh.DonorRepository.GetTopUpByID(req.ExternalID)
+	topUp, err := dh.DonorRepository.UpdateTopUpStatus(req.ExternalID, req.Status, req.PaymentMethod, req.CompletedAt)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if err.Error() == "not found" {
 			return c.JSON(http.StatusNotFound, map[string]string{"message": "Top up not found"})
 		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to retrieve top up detail"})
-	}
-
-	if err := dh.DonorRepository.UpdateTopUpStatus(topUp, req.CompletedAt, req.Status, req.PaymentMethod); err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update top up status"})
 	}
 
-	if err := dh.DonorRepository.UpdateDonorBalance(topUp.DonorID, topUp.Amount); err != nil {
+	if err := dh.DonorRepository.AddDonorBalance(topUp.DonorID, topUp.Amount); err != nil {
+		if err.Error() == "not found" {
+			return c.JSON(http.StatusNotFound, map[string]string{"message": "Donor not found"})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to update donor balance"})
 	}
 
@@ -309,15 +308,3 @@ func (dh *DonorHandler) GetDonationHistory(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, donations)
 }
-
-// Meals
-// Get by ID
-// Request {meals_id}
-// Response {*}
-
-// Update meals stock
-// Request {meals_id, stock}
-// Response {}
-
-// Foundations
-// Check if order exist based on order id (database)

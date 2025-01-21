@@ -6,18 +6,19 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type DonorRepository interface {
 	BeginTransaction() (*gorm.DB, error)
 	Create(donor *models.Donor) error
 	GetDonorByID(donorID string) (*models.Donor, error)
-	UpdateDonorBalance(donorID string, amount float64) error
+	AddDonorBalance(donorID string, amount float64) error
 	DeductDonorBalance(tx *gorm.DB, donorID string, amount float64) error
 	TopUp(topUp *models.TopUp) error
 	GetTopUpByID(topUpID string) (*models.TopUp, error)
 	GetTopUpHistory(donorID string) ([]models.TopUp, error)
-	UpdateTopUpStatus(topUp *models.TopUp, completedAt time.Time, status, paymentMethod string) error
+	UpdateTopUpStatus(topUpID, status, paymentMethod string, completedAt time.Time) (*models.TopUp, error)
 	CreateDonation(tx *gorm.DB, donation *models.Donation) error
 	GetDonationHistory(donorID string) ([]models.Donation, error)
 }
@@ -53,9 +54,18 @@ func (dr *DonorRepositoryImpl) GetDonorByID(donorID string) (*models.Donor, erro
 	return donor, nil
 }
 
-func (dr *DonorRepositoryImpl) UpdateDonorBalance(donorID string, amount float64) error {
+func (dr *DonorRepositoryImpl) AddDonorBalance(donorID string, amount float64) error {
 	donor := models.Donor{ID: donorID}
-	return dr.DB.Model(&donor).Update("balance", amount).Error
+	res := dr.DB.Model(&donor).Update("balance", gorm.Expr("balance + ?", amount))
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return errors.New("not found")
+	}
+
+	return nil
 }
 
 func (dr *DonorRepositoryImpl) DeductDonorBalance(tx *gorm.DB, donorID string, amount float64) error {
@@ -96,8 +106,20 @@ func (dr *DonorRepositoryImpl) GetTopUpHistory(donorID string) ([]models.TopUp, 
 	return topUps, nil
 }
 
-func (dr *DonorRepositoryImpl) UpdateTopUpStatus(topUp *models.TopUp, completedAt time.Time, status, paymentMethod string) error {
-	return dr.DB.Model(topUp).Select("payment_method", "status", "completed_at").Updates(models.TopUp{PaymentMethod: paymentMethod, Status: status, CompletedAt: &completedAt}).Error
+func (dr *DonorRepositoryImpl) UpdateTopUpStatus(topUpID, status, paymentMethod string, completedAt time.Time) (*models.TopUp, error) {
+	topUp := models.TopUp{ID: topUpID}
+	res := dr.DB.Model(&topUp).Clauses(clause.Returning{Columns: []clause.Column{{Name: "donor_id"}, {Name: "amount"}}}).
+		Select("payment_method", "status", "completed_at").
+		Updates(models.TopUp{PaymentMethod: paymentMethod, Status: status, CompletedAt: &completedAt})
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return nil, errors.New("not found")
+	}
+
+	return &topUp, nil
 }
 
 func (dr *DonorRepositoryImpl) CreateDonation(tx *gorm.DB, donation *models.Donation) error {
