@@ -39,17 +39,17 @@ func (fh *FoundationHandler) GetFoundationByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
-func (fh *FoundationHandler) AddOrder(c echo.Context) error {
+func (fh *FoundationHandler) AddOrderlist(c echo.Context) error {
 	foundationID := c.Param("foundation_id")
 	if foundationID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Foundation ID is required"})
 	}
 
-	req := new(dtos.OrderRequest)
+	req := new(dtos.OrderlistRequest)
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
 	}
-
+	
 	orderlist := &models.OrderList{
 		FoundationID: foundationID,
 		Status:       "unpaid",
@@ -59,27 +59,42 @@ func (fh *FoundationHandler) AddOrder(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to add orderlist"})
 	}
 
-	var orders []models.Order
-	for _, orderReq := range req.Orders {
-		order := models.Order{
-			OrderListID:     orderlist.ID,
-			MealsID:         orderReq.MealsID,
-			DesiredQuantity: orderReq.DesiredQuantity,
-			Quantity:        0,
-		}
-		orders = append(orders, order)
-	}
-
-	if err := fh.FoundationRepository.AddOrders(orders); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to add orders"})
-	}
-
-	return c.JSON(http.StatusCreated, map[string]interface{}{
-		"message":   "Orderlist and orders added successfully",
-		"orderlist": orderlist,
-		"orders":    orders,
-	})
+	return c.JSON(http.StatusCreated, map[string]string{"message": "Orderlist created successfully"})
 }
+
+// func (fh *FoundationHandler) AddOrder(c echo.Context) error {
+// 	foundationID := c.Param("foundation_id")
+// 	if foundationID == "" {
+// 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Foundation ID is required"})
+// 	}
+
+// 	req := new(dtos.OrderRequest)
+// 	if err := c.Bind(req); err != nil {
+// 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
+// 	}
+
+
+// 	var orders []models.Order
+// 	for _, orderReq := range req.Orders {
+// 		order := models.Order{
+// 			OrderListID:     orderlist.ID,
+// 			MealsID:         orderReq.MealsID,
+// 			DesiredQuantity: orderReq.DesiredQuantity,
+// 			Quantity:        0,
+// 		}
+// 		orders = append(orders, order)
+// 	}
+
+// 	if err := fh.FoundationRepository.AddOrders(orders); err != nil {
+// 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to add orders"})
+// 	}
+
+// 	return c.JSON(http.StatusCreated, map[string]interface{}{
+// 		"message":   "Orderlist and orders added successfully",
+// 		"orderlist": orderlist,
+// 		"orders":    orders,
+// 	})
+// }
 
 func (fh *FoundationHandler) GetOrder(c echo.Context) error {
 	// Extract orderlist_id from the URL parameter
