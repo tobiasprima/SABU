@@ -106,26 +106,3 @@ func (fr *FoundationRepositoryImpl) GetFoundationWithEmail(foundationID string) 
 	}
 	return &foundation, nil
 }
-
-func (fr *FoundationRepositoryImpl) GetOrdersArrayByOrderListID(orderListID string) ([]models.Order, error) {
-	var orders []models.Order
-	if err := fr.DB.Where("order_list_id = ?", orderListID).Find(&orders).Error; err != nil {
-		return nil, err
-	}
-	return orders, nil
-}
-
-func (fr *FoundationRepositoryImpl) UpdateOrderListStatus(orderListID string, status string) error {
-	return fr.DB.Model(&models.OrderList{}).
-		Where("id = ?", orderListID).
-		Update("status", status).
-		Error
-}
-
-func (fr *FoundationRepositoryImpl) GetFoundationWithEmail(foundationID string) (*models.Foundation, error) {
-	var foundation models.Foundation
-	if err := fr.DB.Preload("User").Where("id = ?", foundationID).First(&foundation).Error; err != nil {
-		return nil, err
-	}
-	return &foundation, nil
-}
