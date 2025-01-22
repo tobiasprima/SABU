@@ -9,6 +9,6 @@ import (
 func RegisterRoutes(e *echo.Echo, fh *handlers.FoundationHandler) {
 	e.GET("/foundation/:foundation_id", fh.GetFoundationByID)
 	e.POST("/foundation/add-orderlist/:foundation_id", fh.AddOrderlist)
-	// e.POST("/foundation/add-order/:foundation_id", fh.AddOrder)
+	e.POST("/foundation/add-order/:orderlist_id", fh.AddOrder)
 	e.GET("/foundation/get-order/:orderlist_id", fh.GetOrder)
 }
