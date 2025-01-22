@@ -8,13 +8,16 @@ import (
 )
 
 type FoundationRepository interface {
-	Create(foundation *models.Foundation) error
+	CreateFoundation(foundation *models.Foundation) error
 	GetFoundationByID(foundationID string) (*models.Foundation, error)
 	AddOrderlist(orderlist *models.OrderList) error
 	AddOrders(orders []models.Order) error
 	GetOrderlistByID(orderlistID string, orderlist *models.OrderList) error
 	GetOrdersByOrderlistID(orderlistID string, orders *[]models.Order) error
 	GetOrderByID(orderID string) (*models.Order, error)
+	GetOrdersArrayByOrderListID(orderListID string) ([]models.Order, error)
+	UpdateOrderListStatus(orderListID string, status string) error
+	GetFoundationWithEmail(foundationID string) (*models.Foundation, error)
 	AddOrderQuantity(orderID string, quantity int) error
 }
 
@@ -26,7 +29,7 @@ func NewFoundationRepositoryImpl(db *gorm.DB) FoundationRepository {
 	return &FoundationRepositoryImpl{db}
 }
 
-func (fr *FoundationRepositoryImpl) Create(foundation *models.Foundation) error {
+func (fr *FoundationRepositoryImpl) CreateFoundation(foundation *models.Foundation) error {
 	return fr.DB.Create(foundation).Error
 }
 
@@ -79,4 +82,27 @@ func (fr *FoundationRepositoryImpl) AddOrderQuantity(orderID string, quantity in
 	}
 
 	return nil
+}
+
+func (fr *FoundationRepositoryImpl) GetOrdersArrayByOrderListID(orderListID string) ([]models.Order, error) {
+	var orders []models.Order
+	if err := fr.DB.Where("order_list_id = ?", orderListID).Find(&orders).Error; err != nil {
+		return nil, err
+	}
+	return orders, nil
+}
+
+func (fr *FoundationRepositoryImpl) UpdateOrderListStatus(orderListID string, status string) error {
+	return fr.DB.Model(&models.OrderList{}).
+		Where("id = ?", orderListID).
+		Update("status", status).
+		Error
+}
+
+func (fr *FoundationRepositoryImpl) GetFoundationWithEmail(foundationID string) (*models.Foundation, error) {
+	var foundation models.Foundation
+	if err := fr.DB.Preload("User").Where("id = ?", foundationID).First(&foundation).Error; err != nil {
+		return nil, err
+	}
+	return &foundation, nil
 }

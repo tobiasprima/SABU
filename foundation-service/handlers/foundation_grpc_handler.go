@@ -63,7 +63,7 @@ func (fh *FoundationGrpcHandler) CommitFoundation(ctx context.Context, req *pb.C
 		}, nil
 	}
 
-	if err := fh.FoundationRepository.Create(foundation); err != nil {
+	if err := fh.FoundationRepository.CreateFoundation(foundation); err != nil {
 		return &pb.CommitFoundationResponse{
 			Success: false,
 			Message: "Failed to commit donor: " + err.Error(),

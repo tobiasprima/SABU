@@ -4,6 +4,8 @@ import (
 	"foundation-service/dtos"
 	"foundation-service/models"
 	"foundation-service/repository"
+
+	"foundation-service/utils"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -138,4 +140,58 @@ func (fh *FoundationHandler) GetOrderById(c echo.Context) error {
 
 	// Return the order in the response
 	return c.JSON(http.StatusOK, order)
+}
+
+func (fh *FoundationHandler) CompleteOrder(c echo.Context) error {
+	// Extract orderlist_id from the URL or payload
+	orderListID := c.Param("orderlist_id")
+	if orderListID == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "OrderList ID is required"})
+	}
+
+	var orderList models.OrderList
+	if err := fh.FoundationRepository.GetOrderlistByID(orderListID, &orderList); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Orderlist not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch orderlist"})
+	}
+
+	// Fetch all orders for the given orderlist
+	orders, err := fh.FoundationRepository.GetOrdersArrayByOrderListID(orderListID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch orders"})
+	}
+
+	// Check if all orders meet the desired quantity
+	for _, order := range orders {
+		if order.Quantity < order.DesiredQuantity {
+			return c.JSON(http.StatusOK, map[string]string{
+				"message": "OrderList is not complete yet",
+			})
+		}
+	}
+
+	// If all orders are complete, update the OrderList status to "complete"
+	if err := fh.FoundationRepository.UpdateOrderListStatus(orderListID, "complete"); err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update OrderList status"})
+	}
+
+	foundation, err := fh.FoundationRepository.GetFoundationWithEmail(orderList.FoundationID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch foundation details"})
+	}
+
+	//Send email notification
+	email := foundation.User.Email
+	name := foundation.Name
+	err = utils.SendCompletionEmail(email, name)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to send email notification"})
+	}
+
+	//Return success response
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "OrderList marked as complete",
+	})
 }
