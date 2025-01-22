@@ -178,7 +178,7 @@ func (h *UserHandler) LoginUser(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid email or password"})
 	}
 
-	token, err := utils.GenerateJWT(user.ID, user.UserType)
+	token, err := utils.GenerateJWT(user.ID, user.UserType, user.Email)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to generate token"})
 	}
