@@ -31,10 +31,17 @@ func main(){
 	}
 	defer donorgRPCConn.Close()
 
+	foundationgRPCConn, err := grpc.Dial("localhost:50053", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to connect to Foundation service: %v", err)
+	}
+	defer foundationgRPCConn.Close()
+
 	restaurantClient := pb.NewRestaurantServiceClient(restaurantgRPCconn)
 	donorClient := pb.NewDonorServiceClient(donorgRPCConn)
+	foundationClient := pb.NewFoundationServiceClient(foundationgRPCConn)
 
-	routes.RegisterRoutes(e, restaurantClient, donorClient)
+	routes.RegisterRoutes(e, restaurantClient, donorClient, foundationClient)
 
 	port := os.Getenv("PORT")
 	if port == "" {

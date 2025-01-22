@@ -36,6 +36,7 @@ func (fh *FoundationGrpcHandler) PrepareFoundation(ctx context.Context, req *pb.
 	fh.preparedFoundations[req.UserId] = &models.Foundation{
 		UserID: req.UserId,
 		Name:   req.Name,
+		Address: req.Address,
 	}
 
 	return &pb.PrepareFoundationResponse{
