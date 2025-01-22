@@ -10,6 +10,10 @@ import (
 type FoundationRepository interface {
 	Create(foundation *models.Foundation) error
 	GetFoundationByID(foundationID string) (*models.Foundation, error)
+	AddOrderlist(orderlist *models.OrderList) error
+	AddOrders(orders []models.Order) error
+	GetOrderlistByID(orderlistID string, orderlist *models.OrderList) error
+	GetOrdersByOrderlistID(orderlistID string, orders *[]models.Order) error
 	GetOrderByID(orderID string) (*models.Order, error)
 	AddOrderQuantity(orderID string, quantity int) error
 }
@@ -34,6 +38,22 @@ func (fr *FoundationRepositoryImpl) GetFoundationByID(foundationID string) (*mod
 	}
 
 	return foundation, nil
+}
+
+func (fr *FoundationRepositoryImpl) AddOrderlist(orderlist *models.OrderList) error {
+	return fr.DB.Create(orderlist).Error
+}
+
+func (fr *FoundationRepositoryImpl) AddOrders(orders []models.Order) error {
+	return fr.DB.Create(&orders).Error
+}
+
+func (fr *FoundationRepositoryImpl) GetOrderlistByID(orderlistID string, orderlist *models.OrderList) error {
+	return fr.DB.Where("id = ?", orderlistID).Take(orderlist).Error
+}
+
+func (fr *FoundationRepositoryImpl) GetOrdersByOrderlistID(orderlistID string, orders *[]models.Order) error {
+	return fr.DB.Where("order_list_id = ?", orderlistID).Find(orders).Error
 }
 
 func (fr *FoundationRepositoryImpl) GetOrderByID(orderID string) (*models.Order, error) {

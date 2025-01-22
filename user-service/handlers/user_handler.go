@@ -17,13 +17,15 @@ type UserHandler struct {
 	UserRepo       *repository.UserRepository
 	RestaurantGRPC  pb.RestaurantServiceClient
 	DonorGRPC  		pb.DonorServiceClient
+	FoundationGRPC  pb.FoundationServiceClient
 }
 
-func NewUserHandler(restaurantClient pb.RestaurantServiceClient, donorClient pb.DonorServiceClient) *UserHandler {
+func NewUserHandler(restaurantClient pb.RestaurantServiceClient, donorClient pb.DonorServiceClient, foundationClient pb.FoundationServiceClient) *UserHandler {
 	return &UserHandler{
 		UserRepo:       repository.NewUserRepository(),
 		RestaurantGRPC: restaurantClient,
 		DonorGRPC: 		donorClient,
+		FoundationGRPC: foundationClient,
 	}
 }
 
@@ -122,6 +124,40 @@ func (h *UserHandler) RegisterUser(c echo.Context) error {
 		_, err = h.DonorGRPC.CommitDonor(ctx, &pb.CommitDonorRequest{UserId: user.ID})
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to commit donor via gRPC"})
+		}
+	} else if req.UserType == "foundation" {
+		if req.Name == "" || req.Address == "" {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": "Name and address are required for user_type 'foundation'",
+			})
+		}
+
+		foundationRequest := &pb.PrepareFoundationRequest{
+			UserId:  user.ID,
+			Email:   user.Email,
+			Name:    req.Name,
+			Address: req.Address,
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		response, err := h.FoundationGRPC.PrepareFoundation(ctx, foundationRequest)
+		if err != nil || !response.Success {
+			tx.Rollback()
+			return c.JSON(http.StatusInternalServerError, map[string]string{
+				"error": "Failed to create foundation via gRPC: " + response.GetMessage(),
+			})
+		}
+
+		if err := h.UserRepo.CommitTransaction(tx); err != nil {
+			_, _ = h.FoundationGRPC.RollbackFoundation(ctx, &pb.RollbackFoundationRequest{UserId: user.ID})
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to commit user transaction"})
+		}
+
+		_, err = h.FoundationGRPC.CommitFoundation(ctx, &pb.CommitFoundationRequest{UserId: user.ID})
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to commit foundation via gRPC"})
 		}
 	}
 	return c.JSON(http.StatusCreated, map[string]string{"message": "User registered successfully"})
