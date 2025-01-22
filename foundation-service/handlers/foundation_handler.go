@@ -5,7 +5,7 @@ import (
 	"foundation-service/models"
 	"foundation-service/repository"
 
-	//"foundation-service/utils"
+	"foundation-service/utils"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -169,20 +169,20 @@ func (fh *FoundationHandler) CompleteOrder(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update OrderList status"})
 	}
 
-	// foundation, err := fh.FoundationRepository.GetFoundationWithEmail(orderList.FoundationID)
-	// if err != nil {
-	// 	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch foundation details"})
-	// }
+	foundation, err := fh.FoundationRepository.GetFoundationWithEmail(orderList.FoundationID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch foundation details"})
+	}
 
-	// Send email notification
-	// email := foundation.User.Email
-	// name := foundation.Name
-	// err = utils.SendCompletionEmail(email, name)
-	// if err != nil {
-	// 	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to send email notification"})
-	// }
+	//Send email notification
+	email := foundation.User.Email
+	name := foundation.Name
+	err = utils.SendCompletionEmail(email, name)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to send email notification"})
+	}
 
-	// Return success response
+	//Return success response
 	return c.JSON(http.StatusOK, map[string]string{
 		"message": "OrderList marked as complete",
 	})
