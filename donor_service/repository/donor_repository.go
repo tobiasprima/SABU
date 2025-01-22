@@ -10,13 +10,17 @@ import (
 )
 
 type DonorRepository interface {
+	BeginTransaction() (*gorm.DB, error)
 	Create(donor *models.Donor) error
 	GetDonorByID(donorID string) (*models.Donor, error)
 	AddDonorBalance(donorID string, amount float64) error
+	DeductDonorBalance(tx *gorm.DB, donorID string, amount float64) error
 	TopUp(topUp *models.TopUp) error
 	GetTopUpByID(topUpID string) (*models.TopUp, error)
 	GetTopUpHistory(donorID string) ([]models.TopUp, error)
 	UpdateTopUpStatus(topUpID, status, paymentMethod string, completedAt time.Time) (*models.TopUp, error)
+	CreateDonation(tx *gorm.DB, donation *models.Donation) error
+	GetDonationHistory(donorID string) ([]models.Donation, error)
 }
 
 type DonorRepositoryImpl struct {
@@ -25,6 +29,15 @@ type DonorRepositoryImpl struct {
 
 func NewDonorRepositoryImpl(db *gorm.DB) DonorRepository {
 	return &DonorRepositoryImpl{db}
+}
+
+func (dr *DonorRepositoryImpl) BeginTransaction() (*gorm.DB, error) {
+	tx := dr.DB.Begin()
+	if err := tx.Error; err != nil {
+		return nil, err
+	}
+
+	return tx, nil
 }
 
 func (dr *DonorRepositoryImpl) Create(donor *models.Donor) error {
@@ -46,6 +59,20 @@ func (dr *DonorRepositoryImpl) AddDonorBalance(donorID string, amount float64) e
 	res := dr.DB.Model(&donor).Update("balance", gorm.Expr("balance + ?", amount))
 	if res.Error != nil {
 		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return errors.New("not found")
+	}
+
+	return nil
+}
+
+func (dr *DonorRepositoryImpl) DeductDonorBalance(tx *gorm.DB, donorID string, amount float64) error {
+	donor := models.Donor{ID: donorID}
+	res := tx.Model(&donor).Update("balance", gorm.Expr("balance - ?", amount))
+	if err := res.Error; err != nil {
+		return err
 	}
 
 	if res.RowsAffected == 0 {
@@ -93,4 +120,18 @@ func (dr *DonorRepositoryImpl) UpdateTopUpStatus(topUpID, status, paymentMethod 
 	}
 
 	return &topUp, nil
+}
+
+func (dr *DonorRepositoryImpl) CreateDonation(tx *gorm.DB, donation *models.Donation) error {
+	return tx.Create(donation).Error
+}
+
+func (dr *DonorRepositoryImpl) GetDonationHistory(donorID string) ([]models.Donation, error) {
+	var donations []models.Donation
+
+	if err := dr.DB.Where("donor_id = ?", donorID).Find(&donations).Error; err != nil {
+		return nil, err
+	}
+
+	return donations, nil
 }

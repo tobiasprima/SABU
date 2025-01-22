@@ -30,6 +30,21 @@ func main() {
 		log.Fatalf("Database connection failed: %v", err)
 	}
 
+	foundationgRPCconn, err := grpc.Dial("localhost:50053", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to connect to Foundation service: %v", err)
+	}
+	defer foundationgRPCconn.Close()
+
+	restaurantgRPCconn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to connect to Restaurant service: %v", err)
+	}
+	defer restaurantgRPCconn.Close()
+
+	foundationClient := pb.NewFoundationServiceClient(foundationgRPCconn)
+	restaurantClient := pb.NewRestaurantServiceClient(restaurantgRPCconn)
+
 	grpcServer := grpc.NewServer()
 
 	donorRepository := repository.NewDonorRepositoryImpl(db)
@@ -55,7 +70,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	paymentService := service.NewPaymentService(os.Getenv("XENDIT_API_KEY"))
-	donorHandler := handlers.NewDonorHandlerImpl(donorRepository, paymentService)
+	donorHandler := handlers.NewDonorHandlerImpl(donorRepository, paymentService, foundationClient, restaurantClient)
 
 	routes.RegisterRoutes(e, *donorHandler)
 

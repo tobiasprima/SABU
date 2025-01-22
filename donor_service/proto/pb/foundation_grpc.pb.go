@@ -19,9 +19,6 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FoundationService_PrepareFoundation_FullMethodName        = "/foundation.FoundationService/PrepareFoundation"
-	FoundationService_CommitFoundation_FullMethodName         = "/foundation.FoundationService/CommitFoundation"
-	FoundationService_RollbackFoundation_FullMethodName       = "/foundation.FoundationService/RollbackFoundation"
 	FoundationService_GetOrderByID_FullMethodName             = "/foundation.FoundationService/GetOrderByID"
 	FoundationService_PrepareAddOrderQuantity_FullMethodName  = "/foundation.FoundationService/PrepareAddOrderQuantity"
 	FoundationService_CommitAddOrderQuantity_FullMethodName   = "/foundation.FoundationService/CommitAddOrderQuantity"
@@ -32,9 +29,6 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FoundationServiceClient interface {
-	PrepareFoundation(ctx context.Context, in *PrepareFoundationRequest, opts ...grpc.CallOption) (*PrepareFoundationResponse, error)
-	CommitFoundation(ctx context.Context, in *CommitFoundationRequest, opts ...grpc.CallOption) (*CommitFoundationResponse, error)
-	RollbackFoundation(ctx context.Context, in *RollbackFoundationRequest, opts ...grpc.CallOption) (*RollbackFoundationResponse, error)
 	GetOrderByID(ctx context.Context, in *OrderID, opts ...grpc.CallOption) (*GetOrderByIDResponse, error)
 	PrepareAddOrderQuantity(ctx context.Context, in *PrepareAddOrderQuantityRequest, opts ...grpc.CallOption) (*PrepareAddOrderQuantityResponse, error)
 	CommitAddOrderQuantity(ctx context.Context, in *CommitAddOrderQuantityRequest, opts ...grpc.CallOption) (*CommitAddOrderQuantityResponse, error)
@@ -47,36 +41,6 @@ type foundationServiceClient struct {
 
 func NewFoundationServiceClient(cc grpc.ClientConnInterface) FoundationServiceClient {
 	return &foundationServiceClient{cc}
-}
-
-func (c *foundationServiceClient) PrepareFoundation(ctx context.Context, in *PrepareFoundationRequest, opts ...grpc.CallOption) (*PrepareFoundationResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(PrepareFoundationResponse)
-	err := c.cc.Invoke(ctx, FoundationService_PrepareFoundation_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *foundationServiceClient) CommitFoundation(ctx context.Context, in *CommitFoundationRequest, opts ...grpc.CallOption) (*CommitFoundationResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CommitFoundationResponse)
-	err := c.cc.Invoke(ctx, FoundationService_CommitFoundation_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *foundationServiceClient) RollbackFoundation(ctx context.Context, in *RollbackFoundationRequest, opts ...grpc.CallOption) (*RollbackFoundationResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RollbackFoundationResponse)
-	err := c.cc.Invoke(ctx, FoundationService_RollbackFoundation_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *foundationServiceClient) GetOrderByID(ctx context.Context, in *OrderID, opts ...grpc.CallOption) (*GetOrderByIDResponse, error) {
@@ -123,9 +87,6 @@ func (c *foundationServiceClient) RollbackAddOrderQuantity(ctx context.Context, 
 // All implementations must embed UnimplementedFoundationServiceServer
 // for forward compatibility.
 type FoundationServiceServer interface {
-	PrepareFoundation(context.Context, *PrepareFoundationRequest) (*PrepareFoundationResponse, error)
-	CommitFoundation(context.Context, *CommitFoundationRequest) (*CommitFoundationResponse, error)
-	RollbackFoundation(context.Context, *RollbackFoundationRequest) (*RollbackFoundationResponse, error)
 	GetOrderByID(context.Context, *OrderID) (*GetOrderByIDResponse, error)
 	PrepareAddOrderQuantity(context.Context, *PrepareAddOrderQuantityRequest) (*PrepareAddOrderQuantityResponse, error)
 	CommitAddOrderQuantity(context.Context, *CommitAddOrderQuantityRequest) (*CommitAddOrderQuantityResponse, error)
@@ -140,15 +101,6 @@ type FoundationServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedFoundationServiceServer struct{}
 
-func (UnimplementedFoundationServiceServer) PrepareFoundation(context.Context, *PrepareFoundationRequest) (*PrepareFoundationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PrepareFoundation not implemented")
-}
-func (UnimplementedFoundationServiceServer) CommitFoundation(context.Context, *CommitFoundationRequest) (*CommitFoundationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CommitFoundation not implemented")
-}
-func (UnimplementedFoundationServiceServer) RollbackFoundation(context.Context, *RollbackFoundationRequest) (*RollbackFoundationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RollbackFoundation not implemented")
-}
 func (UnimplementedFoundationServiceServer) GetOrderByID(context.Context, *OrderID) (*GetOrderByIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrderByID not implemented")
 }
@@ -180,60 +132,6 @@ func RegisterFoundationServiceServer(s grpc.ServiceRegistrar, srv FoundationServ
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&FoundationService_ServiceDesc, srv)
-}
-
-func _FoundationService_PrepareFoundation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PrepareFoundationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FoundationServiceServer).PrepareFoundation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: FoundationService_PrepareFoundation_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FoundationServiceServer).PrepareFoundation(ctx, req.(*PrepareFoundationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _FoundationService_CommitFoundation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CommitFoundationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FoundationServiceServer).CommitFoundation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: FoundationService_CommitFoundation_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FoundationServiceServer).CommitFoundation(ctx, req.(*CommitFoundationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _FoundationService_RollbackFoundation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RollbackFoundationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FoundationServiceServer).RollbackFoundation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: FoundationService_RollbackFoundation_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FoundationServiceServer).RollbackFoundation(ctx, req.(*RollbackFoundationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _FoundationService_GetOrderByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -315,18 +213,6 @@ var FoundationService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "foundation.FoundationService",
 	HandlerType: (*FoundationServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "PrepareFoundation",
-			Handler:    _FoundationService_PrepareFoundation_Handler,
-		},
-		{
-			MethodName: "CommitFoundation",
-			Handler:    _FoundationService_CommitFoundation_Handler,
-		},
-		{
-			MethodName: "RollbackFoundation",
-			Handler:    _FoundationService_RollbackFoundation_Handler,
-		},
 		{
 			MethodName: "GetOrderByID",
 			Handler:    _FoundationService_GetOrderByID_Handler,
