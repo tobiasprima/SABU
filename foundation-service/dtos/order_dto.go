@@ -6,3 +6,7 @@ type OrderRequest struct {
 		DesiredQuantity int    `json:"quantity"`
 	} `json:"orders"`
 }
+
+type CompleteOrderRequest struct {
+	Email string `json:"email`
+}

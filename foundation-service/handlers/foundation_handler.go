@@ -149,6 +149,15 @@ func (fh *FoundationHandler) CompleteOrder(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "OrderList ID is required"})
 	}
 
+	var payload dtos.CompleteOrderRequest
+	if err := c.Bind(&payload); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid payload"})
+	}
+
+	if payload.Email == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email is required"})
+	}
+
 	var orderList models.OrderList
 	if err := fh.FoundationRepository.GetOrderlistByID(orderListID, &orderList); err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -177,7 +186,7 @@ func (fh *FoundationHandler) CompleteOrder(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update OrderList status"})
 	}
 
-	foundation, err := fh.FoundationRepository.GetFoundationWithEmail(orderList.FoundationID)
+	foundation, err := fh.FoundationRepository.GetFoundation(orderListID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch foundation details"})
 	}

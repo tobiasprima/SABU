@@ -11,5 +11,5 @@ func RegisterRoutes(e *echo.Echo, fh *handlers.FoundationHandler) {
 	e.POST("/foundation/add-orderlist/:foundation_id", fh.AddOrderlist)
 	e.POST("/foundation/add-order/:orderlist_id", fh.AddOrder)
 	e.GET("/foundation/get-order/:orderlist_id", fh.GetOrder)
-	e.PUT("/foundation/complete-order/:orderlist_id", fh.CompleteOrder)
+	e.POST("/foundation/complete-order/:orderlist_id", fh.CompleteOrder)
 }

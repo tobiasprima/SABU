@@ -18,6 +18,7 @@ type FoundationRepository interface {
 	GetOrdersArrayByOrderListID(orderListID string) ([]models.Order, error)
 	UpdateOrderListStatus(orderListID string, status string) error
 	GetFoundationWithEmail(foundationID string) (*models.Foundation, error)
+	GetFoundation(orderlistID string) (*models.Foundation, error)
 	AddOrderQuantity(orderID string, quantity int) error
 }
 
@@ -104,5 +105,19 @@ func (fr *FoundationRepositoryImpl) GetFoundationWithEmail(foundationID string) 
 	if err := fr.DB.Preload("User").Where("id = ?", foundationID).First(&foundation).Error; err != nil {
 		return nil, err
 	}
+	return &foundation, nil
+}
+
+func (fr *FoundationRepositoryImpl) GetFoundation(orderlistID string) (*models.Foundation, error) {
+	var orderList models.OrderList
+	if err := fr.DB.Where("id = ?", orderlistID).First(&orderList).Error; err != nil {
+		return nil, err
+	}
+
+	var foundation models.Foundation
+	if err := fr.DB.Where("id = ?", orderList.FoundationID).First(&foundation).Error; err != nil {
+		return nil, err
+	}
+
 	return &foundation, nil
 }
