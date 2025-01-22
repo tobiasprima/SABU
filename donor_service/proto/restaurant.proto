@@ -5,43 +5,10 @@ package restaurant;
 option go_package = "pb/;pb";
 
 service RestaurantService {
-  rpc PrepareRestaurant (PrepareRestaurantRequest) returns (PrepareRestaurantResponse);
-  rpc CommitRestaurant (CommitRestaurantRequest) returns (CommitRestaurantResponse);
-  rpc RollbackRestaurant (RollbackRestaurantRequest) returns (RollbackRestaurantResponse);
   rpc GetMealByID (MealID) returns (GetMealByIDResponse);
   rpc PrepareDeductMealStock (PrepareDeductMealStockRequest) returns (PrepareDeductMealStockResponse);
   rpc CommitDeductMealStock (CommitDeductMealStockRequest) returns (CommitDeductMealStockResponse);
   rpc RollbackDeductMealStock (RollbackDeductMealStockRequest) returns (RollbackDeductMealStockResponse);
-}
-
-message PrepareRestaurantRequest {
-  string user_id = 1;
-  string email = 2;
-  string name = 3;
-  string address = 4;
-}
-
-message PrepareRestaurantResponse {
-  bool success = 1;
-  string message = 2;
-}
-
-message CommitRestaurantRequest {
-  string user_id = 1;
-}
-
-message CommitRestaurantResponse {
-  bool success = 1;
-  string message = 2;
-}
-
-message RollbackRestaurantRequest {
-  string user_id = 1;
-}
-
-message RollbackRestaurantResponse {
-  bool success = 1;
-  string message = 2;
 }
 
 message MealID {
