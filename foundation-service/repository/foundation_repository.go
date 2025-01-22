@@ -7,7 +7,7 @@ import (
 )
 
 type FoundationRepository interface {
-	Create(foundation *models.Foundation) error
+	CreateFoundation(foundation *models.Foundation) error
 	GetFoundationByID(foundationID string) (*models.Foundation, error)
 	AddOrderlist(orderlist *models.OrderList) error
 	AddOrders(orders []models.Order) error
@@ -16,6 +16,7 @@ type FoundationRepository interface {
 	GetOrderByID(orderID string) (*models.Order, error)
 	GetOrdersArrayByOrderListID(orderListID string) ([]models.Order, error)
 	UpdateOrderListStatus(orderListID string, status string) error
+	GetFoundationWithEmail(foundationID string) (*models.Foundation, error)
 }
 
 type FoundationRepositoryImpl struct {
@@ -26,7 +27,7 @@ func NewFoundationRepositoryImpl(db *gorm.DB) FoundationRepository {
 	return &FoundationRepositoryImpl{db}
 }
 
-func (fr *FoundationRepositoryImpl) Create(foundation *models.Foundation) error {
+func (fr *FoundationRepositoryImpl) CreateFoundation(foundation *models.Foundation) error {
 	return fr.DB.Create(foundation).Error
 }
 
@@ -77,4 +78,12 @@ func (fr *FoundationRepositoryImpl) UpdateOrderListStatus(orderListID string, st
 		Where("id = ?", orderListID).
 		Update("status", status).
 		Error
+}
+
+func (fr *FoundationRepositoryImpl) GetFoundationWithEmail(foundationID string) (*models.Foundation, error) {
+	var foundation models.Foundation
+	if err := fr.DB.Preload("User").Where("id = ?", foundationID).First(&foundation).Error; err != nil {
+		return nil, err
+	}
+	return &foundation, nil
 }
