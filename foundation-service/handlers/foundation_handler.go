@@ -46,7 +46,7 @@ func (fh *FoundationHandler) AddOrderlist(c echo.Context) error {
 	if foundationID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Foundation ID is required"})
 	}
-	
+
 	orderlist := &models.OrderList{
 		FoundationID: foundationID,
 		Status:       "unpaid",
@@ -86,8 +86,8 @@ func (fh *FoundationHandler) AddOrder(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, map[string]interface{}{
-		"message":   "Orders added successfully",
-		"orders":    orders,
+		"message": "Orders added successfully",
+		"orders":  orders,
 	})
 }
 
@@ -192,7 +192,7 @@ func (fh *FoundationHandler) CompleteOrder(c echo.Context) error {
 	}
 
 	//Send email notification
-	email := foundation.User.Email
+	email := payload.Email
 	name := foundation.Name
 	err = utils.SendCompletionEmail(email, name)
 	if err != nil {

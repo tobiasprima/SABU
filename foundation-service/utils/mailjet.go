@@ -13,7 +13,7 @@ func SendCompletionEmail(email, foundationName string) error {
 	messages := []mailjet.InfoMessagesV31{
 		{
 			From: &mailjet.RecipientV31{
-				Email: "notifications@foundation.com",
+				Email: os.Getenv("EMAIL_SENDER"),
 				Name:  "Foundation Notifications",
 			},
 			To: &mailjet.RecipientsV31{
