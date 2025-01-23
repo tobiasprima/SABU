@@ -4,7 +4,6 @@ go 1.23.2
 
 require (
 	github.com/google/uuid v1.6.0
-	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/xendit/xendit-go/v6 v6.0.0-20240815053147-7132b34ff21b
 	google.golang.org/grpc v1.69.4

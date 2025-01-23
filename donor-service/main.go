@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"donor-service/config"
 	"donor-service/handlers"
 	"donor-service/proto/pb"
@@ -9,34 +10,44 @@ import (
 	"donor-service/routes"
 	"donor-service/service"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("failed to load .env file: %v", err)
-	}
-
 	db, err := config.InitDB()
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
 	}
 
-	foundationgRPCconn, err := grpc.Dial("localhost:50053", grpc.WithInsecure())
+	creds := credentials.NewTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	})
+
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(creds),
+	}
+
+	foundationgRPCconn, err := grpc.Dial(os.Getenv("FOUNDATION_SERVICE"), opts...)
 	if err != nil {
 		log.Fatalf("Failed to connect to Foundation service: %v", err)
 	}
 	defer foundationgRPCconn.Close()
 
-	restaurantgRPCconn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	creds2 := credentials.NewTLS(&tls.Config{
+		InsecureSkipVerify: true,
+	})
+
+	opts2 := []grpc.DialOption{
+		grpc.WithTransportCredentials(creds2),
+	}
+
+	restaurantgRPCconn, err := grpc.Dial(os.Getenv("RESTAURANT_SERVICE"), opts2...)
 	if err != nil {
 		log.Fatalf("Failed to connect to Restaurant service: %v", err)
 	}
@@ -45,24 +56,7 @@ func main() {
 	foundationClient := pb.NewFoundationServiceClient(foundationgRPCconn)
 	restaurantClient := pb.NewRestaurantServiceClient(restaurantgRPCconn)
 
-	grpcServer := grpc.NewServer()
-
 	donorRepository := repository.NewDonorRepositoryImpl(db)
-	donorGrpcHandler := handlers.NewDonorGrpcHandlerImpl(donorRepository)
-
-	pb.RegisterDonorServiceServer(grpcServer, donorGrpcHandler)
-
-	go func() {
-		listener, err := net.Listen("tcp", ":50052")
-		if err != nil {
-			log.Fatalf("Failed to listen on port 50052: %v", err)
-		}
-
-		log.Println("gRPC server running on port 50052")
-		if err := grpcServer.Serve(listener); err != nil {
-			log.Fatalf("Failed to serve gRPC server: %v", err)
-		}
-	}()
 
 	e := echo.New()
 
@@ -89,7 +83,6 @@ func main() {
 	<-quit
 	log.Println("Shutting down servers...")
 
-	grpcServer.GracefulStop()
 	if err := e.Shutdown(context.Background()); err != nil {
 		log.Fatalf("Failed to shut down REST server: %v", err)
 	}
