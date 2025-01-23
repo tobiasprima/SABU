@@ -24,10 +24,6 @@ func NewRestaurantRepository() *RestaurantRepository {
 	}
 }
 
-func (r *RestaurantRepository) CreateRestaurant(restaurant *models.Restaurant) error {
-	return r.DB.Create(restaurant).Error
-}
-
 func (r *RestaurantRepository) GetRestaurants() ([]models.Restaurant, error) {
 	var restaurants []models.Restaurant
 	err := r.DB.Find(&restaurants).Error
@@ -83,26 +79,6 @@ func (r *RestaurantRepository) GetMealByID(ctx context.Context, mealId string) (
 	}
 
 	return &meal, nil
-}
-func (r *RestaurantRepository) DeductMealStock(ctx context.Context, meal *models.Meal) error {
-	objectID, err := primitive.ObjectIDFromHex(meal.ID)
-	if err != nil {
-		return errors.New("invalid meal ID format")
-	}
-
-	filter := bson.M{"_id": objectID}
-	update := bson.M{"$inc": bson.M{"stock": -meal.Stock}}
-
-	result, err := r.MealsCollection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-
-	if result.ModifiedCount == 0 {
-		return errors.New("not found")
-	}
-
-	return nil
 }
 
 func (r *RestaurantRepository) UpdateMeal(ctx context.Context, mealId string, updates bson.M) error {

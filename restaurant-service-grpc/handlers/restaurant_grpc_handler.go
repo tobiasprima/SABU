@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"context"
-	"sabu-restaurant-service/models"
-	"sabu-restaurant-service/proto/pb"
-	"sabu-restaurant-service/repository"
+	"restaurant-service-grpc/models"
+	"restaurant-service-grpc/proto/pb"
+	"restaurant-service-grpc/repository"
 	"sync"
 
 	"google.golang.org/grpc/codes"

@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"context"
-	"foundation-service/models"
-	"foundation-service/proto/pb"
-	"foundation-service/repository"
+	"foundation-service-grpc/models"
+	"foundation-service-grpc/proto/pb"
+	"foundation-service-grpc/repository"
 	"sync"
 
 	"google.golang.org/grpc/codes"
@@ -40,8 +40,8 @@ func (fh *FoundationGrpcHandler) PrepareFoundation(ctx context.Context, req *pb.
 	}
 
 	fh.preparedFoundations[req.UserId] = &models.Foundation{
-		UserID: req.UserId,
-		Name:   req.Name,
+		UserID:  req.UserId,
+		Name:    req.Name,
 		Address: req.Address,
 	}
 

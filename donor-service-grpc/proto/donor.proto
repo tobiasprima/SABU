@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package donor;
+
+option go_package = "pb/;pb";
+
+service DonorService {
+  rpc PrepareDonor (PrepareDonorRequest) returns (PrepareDonorResponse);
+  rpc CommitDonor (CommitDonorRequest) returns (CommitDonorResponse);
+  rpc RollbackDonor (RollbackDonorRequest) returns (RollbackDonorResponse);
+}
+
+message PrepareDonorRequest {
+  string name = 1;
+  string user_id = 2;
+}
+
+message PrepareDonorResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message CommitDonorRequest {
+  string user_id = 1;
+}
+
+message CommitDonorResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RollbackDonorRequest {
+  string user_id = 1;
+}
+
+message RollbackDonorResponse {
+  bool success = 1;
+  string message = 2;
+}

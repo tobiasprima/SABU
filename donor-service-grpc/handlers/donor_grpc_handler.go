@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"context"
-	"donor-service/models"
-	"donor-service/proto/pb"
-	"donor-service/repository"
+	"donor-service-grpc/models"
+	"donor-service-grpc/proto/pb"
+	"donor-service-grpc/repository"
 	"sync"
 )
 
