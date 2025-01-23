@@ -4,23 +4,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"sabu-api-gateway/utils"
 	"strings"
 
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 )
 
 var serviceMap map[string]string
 
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("failed to load .env file: %v", err)
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatalf("failed to load .env file: %v", err)
+	// }
 
 	serviceMap = map[string]string{
 		"foundation": os.Getenv("FOUNDATION_SERVICE"),
