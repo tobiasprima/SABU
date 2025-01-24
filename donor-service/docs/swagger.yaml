@@ -1,0 +1,298 @@
+definitions:
+  dtos.DonateRequest:
+    properties:
+      order_id:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  dtos.DonorData:
+    properties:
+      balance:
+        type: number
+      id:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: string
+    type: object
+  dtos.TopUpRequest:
+    properties:
+      amount:
+        type: number
+    type: object
+  dtos.XenditWebhookRequest:
+    properties:
+      external_id:
+        type: string
+      invoice_id:
+        type: string
+      paid_at:
+        type: string
+      payment_method:
+        type: string
+      status:
+        type: string
+    type: object
+  models.Donation:
+    properties:
+      created_at:
+        type: string
+      donor_id:
+        type: string
+      id:
+        type: string
+      order_id:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  models.TopUp:
+    properties:
+      amount:
+        type: number
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      donor_id:
+        type: string
+      id:
+        type: string
+      invoice_id:
+        type: string
+      invoice_url:
+        type: string
+      payment_method:
+        type: string
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /donor/{donor_id}:
+    get:
+      description: Retrieve details of a donor by its ID
+      parameters:
+      - description: Donor ID
+        in: path
+        name: donor_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.DonorData'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get donor by ID
+      tags:
+      - Donor
+  /donor/donate/{donor_id}:
+    post:
+      description: Donate
+      parameters:
+      - description: Donor ID
+        in: path
+        name: donor_id
+        required: true
+        type: string
+      - description: Donate request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.DonateRequest'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Donation'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Donate
+      tags:
+      - Donor
+  /donor/donation-history/{donor_id}:
+    get:
+      description: Retrieve donor's donation history
+      parameters:
+      - description: Donor ID
+        in: path
+        name: donor_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Donation'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get donation history
+      tags:
+      - Donor
+  /donor/top-up-history/{donor_id}:
+    get:
+      description: Retrieve donor's top up history
+      parameters:
+      - description: Donor ID
+        in: path
+        name: donor_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.TopUp'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get top up history
+      tags:
+      - Donor
+  /donor/top-up/{donor_id}:
+    post:
+      description: Top Up Donor Balance
+      parameters:
+      - description: Donor ID
+        in: path
+        name: donor_id
+        required: true
+        type: string
+      - description: Top up request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.TopUpRequest'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.TopUp'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Top Up
+      tags:
+      - Donor
+  /donor/update-top-up:
+    post:
+      description: Webhook endpoint to update top up status
+      parameters:
+      - description: Webhook request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.XenditWebhookRequest'
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update Top Up Status
+      tags:
+      - Donor
+swagger: "2.0"
