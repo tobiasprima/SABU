@@ -32,6 +32,15 @@ func NewDonorHandlerImpl(donorRepository repository.DonorRepository, paymentServ
 	}
 }
 
+// GetDonorByID godoc
+// @Summary      Get donor by ID
+// @Description  Retrieve details of a donor by its ID
+// @Tags         Donor
+// @Param        donor_id path string true "Donor ID"
+// @Success      200 {object} dtos.DonorData
+// @Failure      404 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /donor/{donor_id} [get]
 func (dh *DonorHandler) GetDonorByID(c echo.Context) error {
 	donorID := c.Param("id")
 
@@ -53,6 +62,17 @@ func (dh *DonorHandler) GetDonorByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
+// TopUp godoc
+// @Summary      Top Up
+// @Description  Top Up Donor Balance
+// @Tags         Donor
+// @Param        donor_id path string true "Donor ID"
+// @Param        body body dtos.TopUpRequest true "Top up request payload"
+// @Success      201 {object} models.TopUp
+// @Failure      400 {object} map[string]string
+// @Failure      404 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /donor/top-up/{donor_id} [post]
 func (dh *DonorHandler) TopUp(c echo.Context) error {
 	donorID := c.Param("donorID")
 
@@ -98,6 +118,15 @@ func (dh *DonorHandler) TopUp(c echo.Context) error {
 	return c.JSON(http.StatusCreated, topUp)
 }
 
+// GetTopUpHistory godoc
+// @Summary      Get top up history
+// @Description  Retrieve donor's top up history
+// @Tags         Donor
+// @Param        donor_id path string true "Donor ID"
+// @Success      200 {object} []models.TopUp
+// @Failure      404 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /donor/top-up-history/{donor_id} [get]
 func (dh *DonorHandler) GetTopUpHistory(c echo.Context) error {
 	donorID := c.Param("donorID")
 
@@ -117,6 +146,17 @@ func (dh *DonorHandler) GetTopUpHistory(c echo.Context) error {
 	return c.JSON(http.StatusOK, topUps)
 }
 
+// Update Top Up Status godoc
+// @Summary      Update Top Up Status
+// @Description  Webhook endpoint to update top up status
+// @Tags         Donor
+// @Param        body body dtos.XenditWebhookRequest true "Webhook request payload"
+// @Success      201 {object} map[string]string
+// @Failure      400 {object} map[string]string
+// @Failure      401 {object} map[string]string
+// @Failure      404 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /donor/update-top-up [post]
 func (dh *DonorHandler) UpdateTopUpStatus(c echo.Context) error {
 	webhookToken := c.Request().Header.Get("x-callback-token")
 	if webhookToken != os.Getenv("XENDIT_WEBHOOK_TOKEN") {
@@ -146,6 +186,18 @@ func (dh *DonorHandler) UpdateTopUpStatus(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"message": "Successfully updated top up status"})
 }
 
+// Donate godoc
+// @Summary      Donate
+// @Description  Donate
+// @Tags         Donor
+// @Param        donor_id path string true "Donor ID"
+// @Param        body body dtos.DonateRequest true "Donate request payload"
+// @Success      201 {object} models.Donation
+// @Failure      400 {object} map[string]string
+// @Failure      404 {object} map[string]string
+// @Failure 	 422 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /donor/donate/{donor_id} [post]
 func (dh *DonorHandler) Donate(c echo.Context) error {
 	donorID := c.Param("donorID")
 
@@ -290,6 +342,15 @@ func (dh *DonorHandler) Donate(c echo.Context) error {
 	return c.JSON(http.StatusOK, donation)
 }
 
+// GetDonationHistory godoc
+// @Summary      Get donation history
+// @Description  Retrieve donor's donation history
+// @Tags         Donor
+// @Param        donor_id path string true "Donor ID"
+// @Success      200 {object} []models.Donation
+// @Failure      404 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /donor/donation-history/{donor_id} [get]
 func (dh *DonorHandler) GetDonationHistory(c echo.Context) error {
 	donorID := c.Param("donorID")
 

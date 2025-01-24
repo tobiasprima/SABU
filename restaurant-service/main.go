@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func main(){
+func main() {
 	// err := godotenv.Load()
 	// if err != nil {
 	// 	log.Fatalf("failed to load .env file: %v", err)
@@ -40,13 +40,13 @@ func main(){
 	}()
 
 	quit := make(chan os.Signal, 1)
-    signal.Notify(quit, os.Interrupt)
-    <-quit
-    log.Println("Shutting down servers...")
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	log.Println("Shutting down servers...")
 
-    if err := e.Shutdown(context.Background()); err != nil {
-        log.Fatalf("Failed to shut down REST server: %v", err)
-    }
+	if err := e.Shutdown(context.Background()); err != nil {
+		log.Fatalf("Failed to shut down REST server: %v", err)
+	}
 
-    log.Println("Servers shut down gracefully")
+	log.Println("Servers shut down gracefully")
 }

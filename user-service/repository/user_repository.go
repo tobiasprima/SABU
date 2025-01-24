@@ -40,7 +40,7 @@ func (r *UserRepository) CreateUser(tx *gorm.DB, user *models.User) error {
 
 func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 	var user models.User
-	if err := r.DB.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := r.DB.Session(&gorm.Session{}).Where("email = ?", email).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
