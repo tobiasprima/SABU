@@ -1,0 +1,274 @@
+definitions:
+  dtos.AddMealRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      stock:
+        type: integer
+    type: object
+  models.Meal:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      restaurant_id:
+        type: string
+      stock:
+        type: integer
+    type: object
+  models.Restaurant:
+    properties:
+      address:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+      userID:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /restaurant/{restaurant_id}:
+    get:
+      description: Retrieve details of a restaurant by its ID
+      parameters:
+      - description: Restaurant ID
+        in: path
+        name: restaurant_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Restaurant'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get restaurant by ID
+      tags:
+      - Restaurant
+  /restaurant/add-meal/{restaurant_id}:
+    post:
+      description: Add meal by restaurant ID
+      parameters:
+      - description: Restaurant ID
+        in: path
+        name: restaurant_id
+        required: true
+        type: string
+      - description: Add meal request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.AddMealRequest'
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add meal
+      tags:
+      - Restaurant
+  /restaurant/delete-meal/{meal_id}:
+    delete:
+      description: Delete meal by its ID
+      parameters:
+      - description: Meal ID
+        in: path
+        name: meal_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete meal
+      tags:
+      - Restaurant
+  /restaurant/get-meal/{meal_id}:
+    get:
+      description: Retrieve details of meals by its ID
+      parameters:
+      - description: Meal ID
+        in: path
+        name: meal_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Meal'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get meals by  ID
+      tags:
+      - Restaurant
+  /restaurant/get-meals/{restaurant_id}:
+    get:
+      description: Retrieve details of meals by restaurant ID
+      parameters:
+      - description: Restaurant ID
+        in: path
+        name: restaurant_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Meal'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get meals by restaurant ID
+      tags:
+      - Restaurant
+  /restaurant/update-meal/{meal_id}:
+    patch:
+      description: Update meal by its ID
+      parameters:
+      - description: Meal ID
+        in: path
+        name: meal_id
+        required: true
+        type: string
+      - description: Update meal request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update meal
+      tags:
+      - Restaurant
+  /restaurants:
+    get:
+      description: Retrieve all restaurant
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Restaurant'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get restaurants
+      tags:
+      - Restaurant
+swagger: "2.0"
