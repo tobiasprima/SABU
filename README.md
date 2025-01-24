@@ -40,9 +40,54 @@ Donation application so people can participate with government program "Makan Be
 
 This app is containerized and deployed to Google Cloud Platform as a microservices. This means for each service (user-service, foundation-service, donor-service, restaurant-service and api-gateway) is a separate instance. 
 
-RESTAURANT_SERVICE=https://restaurant-service-75625270837.asia-southeast2.run.app/
-FOUNDATION_SERVICE=https://foundation-service-75625270837.asia-southeast2.run.app/
-DONOR_SERVICE=https://donor-service-75625270837.asia-southeast2.run.app/
-USER_SERVICE=https://user-service-75625270837.asia-southeast2.run.app/
+### **Base URL for API Gateway:**
+```bash
+https://api-gateway-75625270837.asia-southeast2.run.app/
+```
 
-API_GATEWAY=https://api-gateway-75625270837.asia-southeast2.run.app/
+## Quick Start Endpoint Testing
+### 1. **Register User**
+- **Endpoint:**
+  ```bash
+  POST https://api-gateway-75625270837.asia-southeast2.run.app/user/register
+  ```
+  
+- **Payloads** (Based on User Type):
+  - **For Donor:**
+    ```json
+    {
+        "email": "YOUR_EMAIL",
+        "password": "YOUR_PASSWORD",
+        "user_type": "donor",
+        "name": "YOUR_DONOR_NAME"
+    }
+    ```
+  - **For Restaurant or Foundation:**
+    ```json
+    {
+        "email": "YOUR_EMAIL",
+        "password": "YOUR_PASSWORD",
+        "user_type": "restaurant" or "foundation",
+        "name": "YOUR_RESTAURANT_NAME_OR_FOUNDATION_NAME",
+        "address": "YOUR_ADDRESS"
+    }
+    ```
+
+---
+
+### 2. **Login User**
+- **Endpoint:**
+  ```bash
+  POST https://api-gateway-75625270837.asia-southeast2.run.app/user/login
+  ```
+
+- **Payload:**
+    ```json
+    {
+        "email": "YOUR_EMAIL",
+        "password": "YOUR_PASSWORD"
+    }
+    ```
+
+- **Response (Success):**
+  - Returns an **access token** that must be included in the `Authorization` header (as `Bearer TOKEN`) for subsequent requests.
