@@ -1,0 +1,214 @@
+definitions:
+  dtos.CompleteOrderRequest:
+    properties:
+      email:
+        type: string
+    type: object
+  dtos.FoundationData:
+    properties:
+      address:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: string
+    type: object
+  dtos.OrderRequest:
+    properties:
+      orders:
+        items:
+          properties:
+            meals_id:
+              type: string
+            quantity:
+              type: integer
+          type: object
+        type: array
+    type: object
+info:
+  contact: {}
+paths:
+  /foundation/{foundation_id}:
+    get:
+      description: Retrieve details of a foundation by its ID
+      parameters:
+      - description: Foundation ID
+        in: path
+        name: foundation_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.FoundationData'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get foundation by ID
+      tags:
+      - Foundation
+  /foundation/add-order/{orderlist_id}:
+    post:
+      description: Add multiple orders to an existing order list
+      parameters:
+      - description: Order List ID
+        in: path
+        name: orderlist_id
+        required: true
+        type: string
+      - description: Order request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.OrderRequest'
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add orders to an order list
+      tags:
+      - Order
+  /foundation/add-orderlist/{foundation_id}:
+    post:
+      description: Create a new order list for the specified foundation
+      parameters:
+      - description: Foundation ID
+        in: path
+        name: foundation_id
+        required: true
+        type: string
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add a new order list
+      tags:
+      - OrderList
+  /foundation/complete-order/{orderlist_id}:
+    post:
+      description: Mark an order list as complete and send an email notification
+      parameters:
+      - description: Order List ID
+        in: path
+        name: orderlist_id
+        required: true
+        type: string
+      - description: Complete order request payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.CompleteOrderRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Mark an order list as complete
+      tags:
+      - OrderList
+  /foundation/get-order/{orderlist_id}:
+    get:
+      description: Retrieve all orders for a specific order list
+      parameters:
+      - description: Order List ID
+        in: path
+        name: orderlist_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get orders by order list ID
+      tags:
+      - Order
+swagger: "2.0"

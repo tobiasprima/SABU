@@ -4,6 +4,7 @@ import (
 	"foundation-service/handlers"
 
 	"github.com/labstack/echo/v4"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 func RegisterRoutes(e *echo.Echo, fh *handlers.FoundationHandler) {
@@ -12,4 +13,5 @@ func RegisterRoutes(e *echo.Echo, fh *handlers.FoundationHandler) {
 	e.POST("/foundation/add-order/:orderlist_id", fh.AddOrder)
 	e.GET("/foundation/get-order/:orderlist_id", fh.GetOrder)
 	e.POST("/foundation/complete-order/:orderlist_id", fh.CompleteOrder)
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 }
