@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-func main(){
+func main() {
 	e := echo.New()
 
 	err := config.InitDB()
