@@ -15,20 +15,29 @@ import (
 
 type UserHandler struct {
 	UserRepo       *repository.UserRepository
-	RestaurantGRPC  pb.RestaurantServiceClient
-	DonorGRPC  		pb.DonorServiceClient
-	FoundationGRPC  pb.FoundationServiceClient
+	RestaurantGRPC pb.RestaurantServiceClient
+	DonorGRPC      pb.DonorServiceClient
+	FoundationGRPC pb.FoundationServiceClient
 }
 
 func NewUserHandler(restaurantClient pb.RestaurantServiceClient, donorClient pb.DonorServiceClient, foundationClient pb.FoundationServiceClient) *UserHandler {
 	return &UserHandler{
 		UserRepo:       repository.NewUserRepository(),
 		RestaurantGRPC: restaurantClient,
-		DonorGRPC: 		donorClient,
+		DonorGRPC:      donorClient,
 		FoundationGRPC: foundationClient,
 	}
 }
 
+// RegisterUser godoc
+// @Summary      Register User
+// @Description  Register User
+// @Tags         User
+// @Param        body body dtos.RegisterUserRequest true "Register user request payload"
+// @Success      201 {object} map[string]string
+// @Failure      400 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /user/register [post]
 func (h *UserHandler) RegisterUser(c echo.Context) error {
 	req := new(dtos.RegisterUserRequest)
 	if err := c.Bind(req); err != nil {
@@ -101,8 +110,8 @@ func (h *UserHandler) RegisterUser(c echo.Context) error {
 		}
 
 		donorRequest := &pb.PrepareDonorRequest{
-			UserId:  user.ID,
-			Name:    req.Name,
+			UserId: user.ID,
+			Name:   req.Name,
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -163,6 +172,16 @@ func (h *UserHandler) RegisterUser(c echo.Context) error {
 	return c.JSON(http.StatusCreated, map[string]string{"message": "User registered successfully"})
 }
 
+// LoginUser godoc
+// @Summary      Login User
+// @Description  Login User
+// @Tags         User
+// @Param        body body models.User true "Login user request payload"
+// @Success      200 {object} map[string]string
+// @Failure      400 {object} map[string]string
+// @Failure      401 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /user/login [post]
 func (h *UserHandler) LoginUser(c echo.Context) error {
 	req := new(models.User)
 	if err := c.Bind(req); err != nil {
