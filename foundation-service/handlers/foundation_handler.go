@@ -20,6 +20,16 @@ func NewFoundationHandlerImpl(foundationRepository repository.FoundationReposito
 	return &FoundationHandler{FoundationRepository: foundationRepository}
 }
 
+// GetFoundationByID godoc
+// @Summary      Get foundation by ID
+// @Description  Retrieve details of a foundation by its ID
+// @Tags         Foundation
+// @Param        foundation_id path string true "Foundation ID"
+// @Success      200 {object} dtos.FoundationData
+// @Failure      400 {object} map[string]string
+// @Failure      404 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /foundation/{foundation_id} [get]
 func (fh *FoundationHandler) GetFoundationByID(c echo.Context) error {
 	foundationID := c.Param("foundation_id")
 
@@ -41,6 +51,15 @@ func (fh *FoundationHandler) GetFoundationByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
+// AddOrderlist godoc
+// @Summary      Add a new order list
+// @Description  Create a new order list for the specified foundation
+// @Tags         OrderList
+// @Param        foundation_id path string true "Foundation ID"
+// @Success      201 {object} map[string]string
+// @Failure      400 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /foundation/add-orderlist/{foundation_id} [post]
 func (fh *FoundationHandler) AddOrderlist(c echo.Context) error {
 	foundationID := c.Param("foundation_id")
 	if foundationID == "" {
@@ -59,6 +78,16 @@ func (fh *FoundationHandler) AddOrderlist(c echo.Context) error {
 	return c.JSON(http.StatusCreated, map[string]string{"message": "Orderlist created successfully"})
 }
 
+// AddOrder godoc
+// @Summary      Add orders to an order list
+// @Description  Add multiple orders to an existing order list
+// @Tags         Order
+// @Param        orderlist_id path string true "Order List ID"
+// @Param        body body dtos.OrderRequest true "Order request payload"
+// @Success      201 {object} map[string]interface{}
+// @Failure      400 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /foundation/add-order/{orderlist_id} [post]
 func (fh *FoundationHandler) AddOrder(c echo.Context) error {
 	orderListID := c.Param("orderlist_id")
 	if orderListID == "" {
@@ -91,6 +120,16 @@ func (fh *FoundationHandler) AddOrder(c echo.Context) error {
 	})
 }
 
+// GetOrder godoc
+// @Summary      Get orders by order list ID
+// @Description  Retrieve all orders for a specific order list
+// @Tags         Order
+// @Param        orderlist_id path string true "Order List ID"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} map[string]string
+// @Failure      404 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /foundation/get-order/{orderlist_id} [get]
 func (fh *FoundationHandler) GetOrder(c echo.Context) error {
 	// Extract orderlist_id from the URL parameter
 	orderlistID := c.Param("orderlist_id")
@@ -142,6 +181,17 @@ func (fh *FoundationHandler) GetOrderById(c echo.Context) error {
 	return c.JSON(http.StatusOK, order)
 }
 
+// CompleteOrder godoc
+// @Summary      Mark an order list as complete
+// @Description  Mark an order list as complete and send an email notification
+// @Tags         OrderList
+// @Param        orderlist_id path string true "Order List ID"
+// @Param        body body dtos.CompleteOrderRequest true "Complete order request payload"
+// @Success      200 {object} map[string]string
+// @Failure      400 {object} map[string]string
+// @Failure      404 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /foundation/complete-order/{orderlist_id} [post]
 func (fh *FoundationHandler) CompleteOrder(c echo.Context) error {
 	// Extract orderlist_id from the URL or payload
 	orderListID := c.Param("orderlist_id")
